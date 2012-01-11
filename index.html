@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>PonyDraw</title>
+
+		<script type="text/javascript" src="network.js"></script>
+		<script type="text/javascript" src="ui.js"></script>
+		<script type="text/javascript" src="chat.js"></script>
+		<script type="text/javascript" src="drawing.js"></script>
+		<script type="text/javascript">
+			var curRoom, name;
+
+			window.onload = function() {
+				initWebSocket();
+				initUI();
+				initDrawing();
+			}
+		</script>
+		<style>
+		body {
+			padding: 0px;
+			margin: 0px;
+		}
+		#chat {
+			height: 7em;
+			overflow-y: scroll;
+		}
+		.serviceMsg {
+			color: gray;
+			font-style: italic;
+		}
+
+		#layerHolder {
+			position: absolute;
+			top: 0px;
+			left: 0px;
+			right: 250px;
+			bottom: 160px;
+		}
+
+		.layer {
+			position: absolute;
+			top: 0px;
+			left: 0px;
+		}
+		.touchOverlay {
+			z-index: 1000;
+			border: 1px solid;
+		}
+
+		#chatHolder {
+			border-top: 1px solid;
+			position: absolute;
+			bottom: 0px;
+			right: 250px;
+			left: 0px;
+			height: 160px;
+		}
+		#toolHolder {
+			border-left: 1px solid;
+			position: absolute;
+			right: 0px;
+			height: 100%;
+			width: 250px;
+		}
+		</style>
+	</head>
+	<body>
+		<div id='layerHolder'>
+			<canvas class='layer' id='drawingCanvas'>Y U NO SUPPORT CANVAS?</canvas>
+			<div class='layer touchOverlay' id='touchOverlay'></div>
+		</div>
+		<div id='chatHolder'>
+			<form name='join'>
+				<input placeholder='name' name='name' disabled>
+				<input type='password' placeholder='password' name='password' disabled>
+				<input placeholder='room' name='room' disabled>
+				<input type='submit' name='join' value='join' disabled>
+			</form>
+			<div id="chat"></div>
+			<form name='chatMsg'>
+				<input name='msg' disabled>
+				<input type='submit' name='send' value='send' disabled>
+			</form>
+		</div>
+		<div id='toolHolder'>
+			<form name='drawingSettings'>
+				Line thickness: <input type='number' name='thickness' min='1' max='15' value='3'><br />
+				Color (in RGBA):<br />
+				<input type='number' name='colorR' min='0' max='255' step='10' value='0'>
+				<input type='number' name='colorG' min='0' max='255' step='10' value='0'>
+				<input type='number' name='colorB' min='0' max='255' step='10' value='0'>
+				<input type='number' name='colorA' min='0' max='100' step='5' value='100'><br />
+				<canvas id='toolsPreview' width='250' height='40'>
+			</form>
+		</div>
+	</body>
+</html>
