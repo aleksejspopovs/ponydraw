@@ -2,7 +2,7 @@
 <html>
 	<head>
 		<title>PonyDraw</title>
-
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 		<script type="text/javascript" src="network.js"></script>
 		<script type="text/javascript" src="ui.js"></script>
 		<script type="text/javascript" src="chat.js"></script>
@@ -63,6 +63,10 @@
 			height: 100%;
 			width: 250px;
 		}
+		strong {
+			font-size: 14pt;
+			font-variant: small-caps;
+		}
 		</style>
 	</head>
 	<body>
@@ -85,13 +89,23 @@
 		</div>
 		<div id='toolHolder'>
 			<form name='drawingSettings'>
+				<strong>Tool:</strong><br />
+				<label><input type='radio' name='tool' id='pencil' checked>Pencil</label>
+				<label><input type='radio' name='tool' id='picker'>Color picker</label>
+				<br />
+				<strong>Options:</strong><br />
 				Line thickness: <input type='number' name='thickness' min='1' max='15' value='3'><br />
 				Color (in RGBA):<br />
 				<input type='number' name='colorR' min='0' max='255' step='10' value='0'>
 				<input type='number' name='colorG' min='0' max='255' step='10' value='0'>
 				<input type='number' name='colorB' min='0' max='255' step='10' value='0'>
 				<input type='number' name='colorA' min='0' max='100' step='5' value='100'><br />
-				<canvas id='toolsPreview' width='250' height='40'>
+				<canvas id='toolsPreview' width='250' height='40'></canvas><br />
+				<strong>Layers:</strong><br />
+				<div id='layerList'>
+					none yet, lol
+				</div>
+				<a id='newLayer' href='#'>new layer</a>
 			</form>
 		</div>
 	</body>

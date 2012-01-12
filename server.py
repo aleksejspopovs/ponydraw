@@ -31,7 +31,7 @@ class BroadcastServerProtocol(WebSocketServerProtocol):
 		msg['type'] = 'chat'
 		msg['name'] = self.name
 		msg['msg'] = text
-		return json.dumps(msg)		
+		return json.dumps(msg)
 
 	def onOpen(self):
 		self.factory.register(self)
@@ -39,7 +39,7 @@ class BroadcastServerProtocol(WebSocketServerProtocol):
 	def onMessage(self, msg, binary):
 		if binary:
 			return
-		
+
 		message = json.loads(msg)
 		for i in message:
 			if (type(message[i]) == str) or (type(message[i]) == unicode):
@@ -103,7 +103,9 @@ class BroadcastServerFactory(WebSocketServerFactory):
 	def canJoin(self, user, password, room):
 		if (room not in self.rooms):
 			self.rooms[room] = {
-				"users": {user: { "password": password, "mod": True }}
+				"users": {user: { "password": password, "mod": True }},
+				"width": 640,
+				"height": 480
 			}
 		if (user not in self.rooms[room]['users']):
 			self.rooms[room]['users'][user] = { "password": password, "mod": False }
@@ -122,9 +124,10 @@ class BroadcastServerFactory(WebSocketServerFactory):
 		msg['type'] = 'joinSuccess'
 		msg['room'] = room
 		msg['mod'] = mod
-		msg['width'] = 640
-		msg['height'] = 480
+		msg['width'] = self.rooms[room]['width']
+		msg['height'] = self.rooms[room]['height']
 		msg['users'] = [c.name for c in self.clients if c.room == room]
+		msg['layers'] = [{"id": 1, "name": 'layer1', 'isMine': True}, {"id": 2, "name": 'layer2', 'isMine': True}, {"id": 3, "name": 'layer3', 'isMine': False}]
 		return json.dumps(msg)
 
 

@@ -1,16 +1,16 @@
 var drawingAllowed = false;
 var ctx, overlay;
-var painting = false;
 var lastPoint;
+var form;
 
 function initDrawing() {
 	disableDrawing();
 	ctx = document.getElementById('drawingCanvas').getContext('2d');
 	overlay = document.getElementById('touchOverlay');
+	form = document.forms.drawingSettings.elements;
 }
 
 function getDrawingSettings() {
-	var form = document.forms.drawingSettings.elements;
 	var res = {};
 	res.strokeStyle = 'rgba(' + form.colorR.value + ',' + form.colorG.value + ',' + form.colorB.value + ', ' + (form.colorA.value / 100) + ')';
 	res.lineWidth = form.thickness.value;
@@ -18,21 +18,27 @@ function getDrawingSettings() {
 }
 
 function mouseDown(e) {
-	painting = true;
-	lastPoint = {
-		x: e.offsetX,
-		y: e.offsetY
-	};
+	if (form.tool.pencil.checked) {
+		lastPoint = {
+			x: e.offsetX,
+			y: e.offsetY
+		};
+		overlay.addEventListener("mousemove", drawHandler);
+		drawHandler(e);
+	} else if (form.tool.picker.checked) {
+		overlay.addEventListener("mousemove", pickerHandler);
+		pickerHandler(e);
+	}
 }
 
 function mouseUp(e) {
-	painting = false;
+	if (form.tool.pencil.checked){
+		painting = false;
+		overlay.removeEventListener("mousemove", drawHandler);
+	}
 }
 
-function mouseHandler(e) {
-	if (!painting) {
-		return;
-	}
+function drawHandler(e) {
 	var point = {
 		x: e.offsetX,
 		y: e.offsetY
@@ -42,6 +48,16 @@ function mouseHandler(e) {
 	drawLine(ctx, lastPoint, point, opts);
 	sendLine(lastPoint, point, opts);
 	lastPoint = point;
+}
+
+function pickerHandler(e) {
+	var data = ctx.getImageData(e.offsetX, e.offsetY, 1, 1);
+	console.log(data);
+	form.colorR.value = data.data[0];
+	form.colorG.value = data.data[1];
+	form.colorB.value = data.data[2];
+	form.colorA.value = data.data[3];
+	updateToolsPreview();
 }
 
 function drawLine(ctx, from, to, opts) {
@@ -70,12 +86,22 @@ function sendLine(from, to, opts) {
 	ws.send(JSON.stringify(msg));
 }
 
-function enableDrawing() {
+function addLayer(layer) {
+	document.getElementById('layerList').innerHTML += '<label>'
+		+ '<input type=\'radio\' name=\'active\' ' + (!layer.isMine ? 'disabled' : '') + ' id=\'i' + layer.id + '\'>'
+		+ '<input type=\'checkbox\' name=\'show\' id=\'i' + layer.id + '\'>'
+		+ layer.name + ' <a href=\'#\' onclick=\'removeLayer(' + layer.id + ');\'>×</a>' + '</label><br />';
+}
+
+function enableDrawing(layers) {
 	drawingAllowed = true;
 	document.getElementById('layerHolder').style.display = "block";
 	overlay.onmousedown = mouseDown;
 	overlay.onmouseup = mouseUp;
-	overlay.onmousemove = mouseHandler;
+	document.getElementById('layerList').innerHTML = '';
+	for (var i in layers) {
+		addLayer(layers[i]);
+	}
 }
 
 function disableDrawing() {

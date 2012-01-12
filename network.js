@@ -30,9 +30,10 @@ function initWebSocket() {
 		setFormDisabled('join', false);
 	}
 
-	ws.onerror = function (e) {
+	ws.onclose = function (e) {
 		connReady = false;
-		serviceMessage('Connection lost.')
+		serviceMessage('Connection lost.');
+		disableDrawing();
 	}
 }
 
@@ -60,17 +61,18 @@ function joinRoom(e) {
 
 function handleJoinSuccess(msg) {
 	curRoom = msg.room;
-	serviceMessage('Welcome to room #' + msg.room + '.' + (msg.mod ? ' You are moderating this room.' : '') + ' There are now ' + msg.users.length + ' users in this room.');
+	serviceMessage('Welcome to room #' + msg.room + '.' + (msg.mod ? ' You are moderating this room.' : '')
+		+ ' There are now ' + msg.users.length + ' users in this room: ' + msg.users.join(', ') + '.');
 	setFormDisabled('chatMsg', false);
 	setCanvasSize(msg.width, msg.height);
-	enableDrawing();
+	enableDrawing(msg.layers);
 }
 
 handlers['joinSuccess'] = handleJoinSuccess;
 
 function handleJoinFailure(msg) {
 	serviceMessage('Could not join room #' + msg.room + '. Server said: ' + msg.error);
-	setFormDisabled('join', false);	
+	setFormDisabled('join', false);
 }
 
 handlers['joinFailure'] = handleJoinFailure;
