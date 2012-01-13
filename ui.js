@@ -49,7 +49,6 @@ function updateToolsPreview() {
 }
 
 function showHideLayers() {
-	console.log('show/hide');
 	var list = document.forms.drawingSettings.show;
 
 	if (list === undefined) {
