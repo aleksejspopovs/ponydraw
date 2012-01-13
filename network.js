@@ -2,6 +2,7 @@ var ws_uri = 'ws://localhost:9000';
 var ws;
 var connReady = false;
 var handlers = {};
+var roomOpts = {};
 
 function messageHandler(e) {
 	var msg = JSON.parse(e.data);
@@ -60,11 +61,10 @@ function joinRoom(e) {
 }
 
 function handleJoinSuccess(msg) {
-	curRoom = msg.room;
+	roomOpts = msg;
 	serviceMessage('Welcome to room #' + msg.room + '.' + (msg.mod ? ' You are moderating this room.' : '')
 		+ ' There are now ' + msg.users.length + ' users in this room: ' + msg.users.join(', ') + '.');
 	setFormDisabled('chatMsg', false);
-	setCanvasSize(msg.width, msg.height);
 	enableDrawing(msg.layers);
 }
 

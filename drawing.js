@@ -1,11 +1,11 @@
 var drawingAllowed = false;
-var ctx, overlay;
+var overlay;
 var lastPoint;
 var form;
+var layers = [];
 
 function initDrawing() {
 	disableDrawing();
-	ctx = document.getElementById('drawingCanvas').getContext('2d');
 	overlay = document.getElementById('touchOverlay');
 	form = document.forms.drawingSettings.elements;
 }
@@ -14,6 +14,13 @@ function getDrawingSettings() {
 	var res = {};
 	res.strokeStyle = 'rgba(' + form.colorR.value + ',' + form.colorG.value + ',' + form.colorB.value + ', ' + (form.colorA.value / 100) + ')';
 	res.lineWidth = form.thickness.value;
+
+	for (var i = 0; i < layers.length; i++) {
+		if (document.getElementById('i' + layers[i].id).checked) {
+			res.layer = layers[i].id;
+		}
+	}
+
 	return res;
 }
 
@@ -45,14 +52,17 @@ function drawHandler(e) {
 	};
 	var opts = getDrawingSettings();
 
-	drawLine(ctx, lastPoint, point, opts);
+	if (opts.layer === undefined) {
+		return;
+	}
+
+	drawLine(lastPoint, point, opts);
 	sendLine(lastPoint, point, opts);
 	lastPoint = point;
 }
 
 function pickerHandler(e) {
 	var data = ctx.getImageData(e.offsetX, e.offsetY, 1, 1);
-	console.log(data);
 	form.colorR.value = data.data[0];
 	form.colorG.value = data.data[1];
 	form.colorB.value = data.data[2];
@@ -60,7 +70,8 @@ function pickerHandler(e) {
 	updateToolsPreview();
 }
 
-function drawLine(ctx, from, to, opts) {
+function drawLine(from, to, opts) {
+	var ctx = document.getElementById('layer_' + opts.layer).getContext('2d');
 	ctx.lineCap = "round";
 	ctx.strokeStyle = opts.strokeStyle;
 	ctx.lineWidth = opts.lineWidth;
@@ -71,7 +82,7 @@ function drawLine(ctx, from, to, opts) {
 }
 
 function receiveLine(msg) {
-	drawLine(ctx, msg.from, msg.to, msg.opts);
+	drawLine(msg.from, msg.to, msg.opts);
 }
 
 handlers['line'] = receiveLine;
@@ -87,10 +98,15 @@ function sendLine(from, to, opts) {
 }
 
 function addLayer(layer) {
+	layers.push(layer);
+	document.getElementById('layers').innerHTML += '<canvas id=\'layer_' + layer.id + '\'>';
+	var c = document.getElementById('layer_' + layer.id);
+	c.className = 'layer';
+	c.style.zIndex = layer.zIndex;
 	document.getElementById('layerList').innerHTML += '<label>'
 		+ '<input type=\'radio\' name=\'active\' ' + (!layer.isMine ? 'disabled' : '') + ' id=\'i' + layer.id + '\'>'
-		+ '<input type=\'checkbox\' name=\'show\' id=\'i' + layer.id + '\'>'
-		+ layer.name + ' <a href=\'#\' onclick=\'removeLayer(' + layer.id + ');\'>×</a>' + '</label><br />';
+		+ '<input type=\'checkbox\' name=\'show\' value=\'' + layer.id + '\' checked>'
+		+ layer.name + ((layer.isMine || roomOpts.mod) ? ' <a href=\'#\' onclick=\'removeLayer(' + layer.id + ');\'>×</a>' : '') + '</label><br />';
 }
 
 function enableDrawing(layers) {
@@ -99,9 +115,12 @@ function enableDrawing(layers) {
 	overlay.onmousedown = mouseDown;
 	overlay.onmouseup = mouseUp;
 	document.getElementById('layerList').innerHTML = '';
+	document.getElementById('layers').innerHTML = '';
 	for (var i in layers) {
 		addLayer(layers[i]);
 	}
+	setCanvasSize(roomOpts.width, roomOpts.height);
+	showHideLayers();
 }
 
 function disableDrawing() {

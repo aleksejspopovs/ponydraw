@@ -5,6 +5,62 @@ from autobahn.websocket import WebSocketServerFactory, WebSocketServerProtocol, 
 from hashlib import sha256
 from cgi import escape
 
+class DrawingRoom():
+	def __init__(self, name, creator, w, h):
+		self.name = name
+		self.users = {
+			creator[0]: {
+				'password': creator[1],
+				'mod': True
+			}
+		}
+		self.width = w
+		self.height = h
+
+	def addUser(self, user):
+		if (user[0] in self.users):
+			return
+
+		self.users[user[0]] = {
+			'password': user[1],
+			'mod': False
+		}
+
+	def getUser(self, which):
+		if (which not in self.users):
+			return None
+		else:
+			return self.users[which]
+
+	def getRoomInfo(self, user):
+		msg = {}
+		msg['type'] = 'joinSuccess'
+		msg['room'] = self.name
+		msg['mod'] = self.users[user]['mod']
+		msg['width'] = self.width
+		msg['height'] = self.height
+		msg['users'] = [c for c in self.users]
+		msg['layers'] = [
+			{"id": 1, "name": 'layer1', 'isMine': True, 'zIndex': 1},
+			{"id": 2, "name": 'layer2', 'isMine': True, 'zIndex': 2},
+			{"id": 3, "name": 'layer3', 'isMine': False, 'zIndex': 3}
+		]
+		return json.dumps(msg)
+
+	def isMod(self, user):
+		try:
+			return self.getUser(user)['mod']
+		except AttributeError:
+			return False
+
+	def getAuthFailMessage(self, room):
+		msg = {}
+		msg['type'] = 'joinFailure'
+		msg['room'] = room
+		msg['error'] = 'Wrong password'
+		return json.dumps(msg)
+
+
 class BroadcastServerProtocol(WebSocketServerProtocol):
 	def __init__(self):
 		self.room = None
@@ -15,7 +71,7 @@ class BroadcastServerProtocol(WebSocketServerProtocol):
 		msg = {}
 		msg['type'] = 'userJoined'
 		msg['name'] = self.name
-		msg['room'] = self.room
+		msg['room'] = self.room.name
 		msg['mod'] = self.isMod
 		return json.dumps(msg)
 
@@ -23,7 +79,7 @@ class BroadcastServerProtocol(WebSocketServerProtocol):
 		msg = {}
 		msg['type'] = 'userLeft'
 		msg['name'] = self.name
-		msg['room'] = self.room
+		msg['room'] = self.room.name
 		return json.dumps(msg)
 
 	def getChatMessage(self, text):
@@ -45,20 +101,19 @@ class BroadcastServerProtocol(WebSocketServerProtocol):
 			if (type(message[i]) == str) or (type(message[i]) == unicode):
 				message[i] = escape(message[i])
 
-		#print message
 		if (message['type'] == 'register'):
 			if self.factory.canJoin(message['name'], sha256(message['password']).hexdigest(), message['room']):
-				self.room = message['room']
+				self.room = self.factory.rooms[message['room']]
 				self.name = message['name']
-				self.isMod = self.factory.isMod(self.name, self.room)
+				self.isMod = self.room.isMod(self.name)
 				self.factory.broadcast(self.getJoinMessage(), self.room, self)
-				self.sendMessage(self.factory.getRoomInfo(self.room, self.isMod))
+				self.sendMessage(self.room.getRoomInfo(self.name))
 			else:
 				self.sendMessage(self.factory.getAuthFailMessage(message['room']))
 				self.sendClose()
 		elif (message['type'] == 'chat'):
 			print self.name,':',message['msg']
-			self.factory.broadcast(self.getChatMessage(message['msg']), self.room, None)
+			self.factory.broadcast(self.getChatMessage(message['msg']), self.room.name, None)
 		elif (message['type'] == 'line'):
 			self.factory.broadcast(msg, self.room, self)
 
@@ -91,44 +146,16 @@ class BroadcastServerFactory(WebSocketServerFactory):
 	def broadcast(self, msg, room, exc):
 		print "broadcasting message '%s' to members of room %s.." % (msg, room)
 		for c in self.clients:
-			if (c.room == room) and (c != exc):
+			if (c.room.name == room) and (c != exc):
 				c.sendMessage(msg)
-
-	def isMod(self, user, room):
-		try:
-			return self.rooms[room]['users'][user]['mod']
-		except KeyError:
-			return False
 
 	def canJoin(self, user, password, room):
 		if (room not in self.rooms):
-			self.rooms[room] = {
-				"users": {user: { "password": password, "mod": True }},
-				"width": 640,
-				"height": 480
-			}
-		if (user not in self.rooms[room]['users']):
-			self.rooms[room]['users'][user] = { "password": password, "mod": False }
+			self.rooms[room] = DrawingRoom(room, (user, password), 1024, 768)
+		if (not self.rooms[room].getUser(user)):
+			self.rooms[room].addUser((user, password))
 
-		return self.rooms[room]['users'][user]['password'] == password
-
-	def getAuthFailMessage(self, room):
-		msg = {}
-		msg['type'] = 'joinFailure'
-		msg['room'] = room
-		msg['error'] = 'Wrong password'
-		return json.dumps(msg)
-
-	def getRoomInfo(self, room, mod):
-		msg = {}
-		msg['type'] = 'joinSuccess'
-		msg['room'] = room
-		msg['mod'] = mod
-		msg['width'] = self.rooms[room]['width']
-		msg['height'] = self.rooms[room]['height']
-		msg['users'] = [c.name for c in self.clients if c.room == room]
-		msg['layers'] = [{"id": 1, "name": 'layer1', 'isMine': True}, {"id": 2, "name": 'layer2', 'isMine': True}, {"id": 3, "name": 'layer3', 'isMine': False}]
-		return json.dumps(msg)
+		return self.rooms[room].getUser(user)['password'] == password
 
 
 if __name__ == '__main__':
