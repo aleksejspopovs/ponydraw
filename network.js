@@ -40,7 +40,8 @@ function initWebSocket() {
 
 function joinRoom(e) {
 	e.preventDefault();
-	if ((e.srcElement.elements.room.value == '') || (e.srcElement.elements.password.value == '') || (e.srcElement.elements.name.value == '')) {
+	var form = document.forms.join;
+	if ((form.elements.room.value == '') || (form.elements.password.value == '') || (form.elements.name.value == '')) {
 		serviceMessage('You have to specify a username, a password and a room name to join a room.');
 		return;
 	}
@@ -50,12 +51,12 @@ function joinRoom(e) {
 	}
 	var msg = {
 		type: 'register',
-		name: e.srcElement.elements.name.value,
-		password: e.srcElement.elements.password.value,
-		room: e.srcElement.elements.room.value
+		name: form.elements.name.value,
+		password: form.elements.password.value,
+		room: form.elements.room.value
 	}
 
-	curName = e.srcElement.elements.name.value;
+	curName = form.elements.name.value;
 	setFormDisabled('join', true);
 	ws.send(JSON.stringify(msg));
 }

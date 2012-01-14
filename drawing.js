@@ -8,6 +8,7 @@ function initDrawing() {
 	disableDrawing();
 	overlay = document.getElementById('touchOverlay');
 	form = document.forms.drawingSettings.elements;
+	document.getElementById('newLayer').onclick = newLayer;
 }
 
 function getDrawingSettings() {
@@ -25,30 +26,32 @@ function getDrawingSettings() {
 }
 
 function mouseDown(e) {
-	if (form.tool.pencil.checked) {
+	e.preventDefault();
+	if (form.tool.item('pencil').checked) {
 		lastPoint = {
-			x: e.offsetX,
-			y: e.offsetY
+			x: e.offsetX ? e.offsetX : e.layerX,
+			y: e.offsetY ? e.offsetY : e.layerY
 		};
 		overlay.addEventListener("mousemove", drawHandler);
 		drawHandler(e);
-	} else if (form.tool.picker.checked) {
+	} else if (form.tool.item('picker').checked) {
 		overlay.addEventListener("mousemove", pickerHandler);
 		pickerHandler(e);
 	}
 }
 
 function mouseUp(e) {
-	if (form.tool.pencil.checked){
+	if (form.tool.item('pencil').checked){
 		painting = false;
 		overlay.removeEventListener("mousemove", drawHandler);
 	}
 }
 
 function drawHandler(e) {
+	e.preventDefault();
 	var point = {
-		x: e.offsetX,
-		y: e.offsetY
+		x: e.offsetX ? e.offsetX : e.layerX,
+		y: e.offsetY ? e.offsetY : e.layerY
 	};
 	var opts = getDrawingSettings();
 
@@ -81,11 +84,11 @@ function drawLine(from, to, opts) {
 	ctx.stroke();
 }
 
-function receiveLine(msg) {
+function handleLine(msg) {
 	drawLine(msg.from, msg.to, msg.opts);
 }
 
-handlers['line'] = receiveLine;
+handlers['line'] = handleLine;
 
 function sendLine(from, to, opts) {
 	var msg = {
@@ -97,17 +100,55 @@ function sendLine(from, to, opts) {
 	ws.send(JSON.stringify(msg));
 }
 
-function addLayer(layer) {
+function newLayer() {
+	var msg = {
+		type: 'newLayer'
+	};
+	ws.send(JSON.stringify(msg));
+}
+
+function handleNewLayer(layer) {
 	layers.push(layer);
-	document.getElementById('layers').innerHTML += '<canvas id=\'layer_' + layer.id + '\'>';
-	var c = document.getElementById('layer_' + layer.id);
+	//document.getElementById('layers').innerHTML += '<canvas id=\'layer_' + layer.id + '\'>';
+	var c = document.createElement('canvas');
+	c.id = 'layer_' + layer.id;
+	c.width = roomOpts.width;
+	c.height = roomOpts.height;
 	c.className = 'layer';
 	c.style.zIndex = layer.zIndex;
-	document.getElementById('layerList').innerHTML += '<label>'
-		+ '<input type=\'radio\' name=\'active\' ' + (!layer.isMine ? 'disabled' : '') + ' id=\'i' + layer.id + '\'>'
+	document.getElementById('layers').appendChild(c);
+
+	var l = document.createElement('label');
+	l.id = 'label_' + layer.id;
+	l.innerHTML = '<input type=\'radio\' name=\'active\' ' + (layer.owner != roomOpts.user ? 'disabled' : '') + ' id=\'i' + layer.id + '\'>'
 		+ '<input type=\'checkbox\' name=\'show\' value=\'' + layer.id + '\' checked>'
-		+ layer.name + ((layer.isMine || roomOpts.mod) ? ' <a href=\'#\' onclick=\'removeLayer(' + layer.id + ');\'>×</a>' : '') + '</label><br />';
+		+ layer.name + ((layer.owner == roomOpts.user || roomOpts.mod) ? ' <a href=\'javascript:void(0)\' onclick=\'removeLayer(' + layer.id + ');\'>×</a>' : '') + '<br />';
+	document.getElementById('layerList').appendChild(l);
 }
+
+handlers['newLayer'] = handleNewLayer;
+
+function removeLayer(id) {
+	var msg = {
+		type: 'removeLayer',
+		id: id
+	};
+	ws.send(JSON.stringify(msg));
+}
+
+function handleRemoveLayer(msg) {
+	serviceMessage(msg.who + ' removed layer \'' + msg.name + '\'');
+	document.getElementById('layerList').removeChild(document.getElementById('label_' + msg.id));
+	document.getElementById('layers').removeChild(document.getElementById('layer_' + msg.id));
+	for (var i = 0; i < layers.length; i++) {
+		if (layers[i].id == msg.id) {
+			layers.splice(i, 1);
+			return;
+		}
+	}
+}
+
+handlers['removeLayer'] = handleRemoveLayer;
 
 function enableDrawing(layers) {
 	drawingAllowed = true;
@@ -117,9 +158,10 @@ function enableDrawing(layers) {
 	document.getElementById('layerList').innerHTML = '';
 	document.getElementById('layers').innerHTML = '';
 	for (var i in layers) {
-		addLayer(layers[i]);
+		handleNewLayer(layers[i]);
 	}
-	setCanvasSize(roomOpts.width, roomOpts.height);
+	overlay.style.width = roomOpts.width + "px";
+	overlay.style.height = roomOpts.height + "px";
 	showHideLayers();
 }
 

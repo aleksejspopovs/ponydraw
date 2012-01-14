@@ -1,13 +1,3 @@
-function serviceMessage(msg) {
-	document.getElementById('chat').innerHTML += '<span class=\'serviceMsg\'>' + msg + '</span><br>';
-	document.getElementById('chat').scrollTop = document.getElementById('chat').scrollHeight;
-}
-
-function chatMessage(author, msg) {
-	document.getElementById('chat').innerHTML += '<span class=\'msgAuthor\'>[' + author + ']:</span> <span class=\'chatMsg\'>' + msg + '</span><br>';
-	document.getElementById('chat').scrollTop = document.getElementById('chat').scrollHeight;
-}
-
 function browserNotSupported() {
 	serviceMessage('Your browser is not supported. Nothing will work.');
 }

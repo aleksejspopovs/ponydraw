@@ -1,3 +1,13 @@
+function serviceMessage(msg) {
+	document.getElementById('chat').innerHTML += '<span class=\'serviceMsg\'>' + msg + '</span><br>';
+	document.getElementById('chat').scrollTop = document.getElementById('chat').scrollHeight;
+}
+
+function chatMessage(author, msg) {
+	document.getElementById('chat').innerHTML += '<span class=\'msgAuthor\'>[' + author + ']:</span> <span class=\'chatMsg\'>' + msg + '</span><br>';
+	document.getElementById('chat').scrollTop = document.getElementById('chat').scrollHeight;
+}
+
 function sendChatMessage(e) {
 	e.preventDefault();
 	if (e.srcElement.elements.msg.value == '') {
@@ -16,3 +26,8 @@ function handleChatMessage(msg) {
 }
 
 handlers['chat'] = handleChatMessage;
+
+function handleAnnouncement(msg) {
+	serviceMessage(msg.msg);
+}
+handlers['announcement'] = handleAnnouncement
