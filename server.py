@@ -15,6 +15,7 @@ class DrawingRoom():
 		self.layersW = 1
 		self.width = w
 		self.height = h
+		self.history = []
 
 		self.addUser(creator, True)
 
@@ -53,6 +54,13 @@ class DrawingRoom():
 		if self.users[user]['mod'] or self.layers[id]['owner'] == user:
 			rip = self.layers[id]
 			del self.layers[id]
+
+			deleted = 0
+			for i in xrange(len(self.history)):
+				if (json.loads(self.history[i - deleted])['opts']['layer'] == id):
+					del self.history[i - deleted]
+					deleted += 1
+
 			return rip
 		else:
 			return False
@@ -86,6 +94,9 @@ class DrawingRoom():
 			return self.layers[layer]['owner'] == user
 		except KeyError:
 			return false
+
+	def addToHistory(self, msg):
+		self.history.append(msg)
 
 	def getAuthFailMessage(self, room):
 		msg = {}
@@ -145,7 +156,7 @@ class BroadcastServerProtocol(WebSocketServerProtocol):
 		message = json.loads(msg)
 		print message
 		for i in message:
-			if (type(message[i]) == str) or (type(message[i]) == unicode):
+			if isinstance(message[i], basestring):
 				message[i] = escape(message[i])
 
 		if (message['type'] == 'register'):
@@ -155,6 +166,12 @@ class BroadcastServerProtocol(WebSocketServerProtocol):
 				self.isMod = self.room.isMod(self.name)
 				self.factory.broadcast(self.getJoinMessage(), self.room.name, self)
 				self.sendMessage(self.room.getRoomInfo(self.name))
+				msg = {}
+				msg['type'] = 'bunch'
+				msg['contents'] = []
+				for i in self.room.history:
+					msg['contents'].append(json.loads(i))
+				self.sendMessage(json.dumps(msg))
 			else:
 				self.sendMessage(self.factory.getAuthFailMessage(message['room']))
 				self.sendClose()
@@ -163,6 +180,7 @@ class BroadcastServerProtocol(WebSocketServerProtocol):
 				self.factory.broadcast(self.getChatMessage(message['msg']), self.room.name, None)
 		elif (message['type'] == 'line'):
 			if (self.room) and (self.room.canDrawOn(self.name, message['opts']['layer'])):
+				self.room.addToHistory(msg)
 				self.factory.broadcast(msg, self.room.name, self)
 		elif (message['type'] == 'newLayer'):
 			res = self.room.addLayer(self.name)

@@ -6,7 +6,15 @@ var roomOpts = {};
 
 function messageHandler(e) {
 	var msg = JSON.parse(e.data);
-	if (msg.type in handlers) {
+	if  (msg.type == 'bunch') {
+		for (var i = 0; i < msg.contents.length; i++) {
+			if (msg.contents[i].type in handlers) {
+				handlers[msg.contents[i].type](msg.contents[i]);
+			} else {
+				console.log('Unkown message received: ',msg.contents[i]);
+			}
+		}
+	} else if (msg.type in handlers) {
 		handlers[msg.type](msg);
 	} else {
 		console.log('Unkown message received: ',msg);
