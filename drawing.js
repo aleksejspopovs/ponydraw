@@ -29,8 +29,8 @@ function mouseDown(e) {
 	e.preventDefault();
 	if (form.tool.item('pencil').checked) {
 		lastPoint = {
-			x: e.offsetX ? e.offsetX : e.layerX,
-			y: e.offsetY ? e.offsetY : e.layerY
+			x: (e.offsetX >= 0 ? e.offsetX : e.layerX) / canvasRatio,
+			y: (e.offsetY >= 0 ? e.offsetY : e.layerY) / canvasRatio
 		};
 		overlay.addEventListener("mousemove", drawHandler);
 		drawHandler(e);
@@ -50,8 +50,8 @@ function mouseUp(e) {
 function drawHandler(e) {
 	e.preventDefault();
 	var point = {
-		x: e.offsetX ? e.offsetX : e.layerX,
-		y: e.offsetY ? e.offsetY : e.layerY
+		x: (e.offsetX >= 0 ? e.offsetX : e.layerX) / canvasRatio,
+		y: (e.offsetY >= 0 ? e.offsetY : e.layerY) / canvasRatio
 	};
 	var opts = getDrawingSettings();
 
@@ -65,7 +65,8 @@ function drawHandler(e) {
 }
 
 function pickerHandler(e) {
-	var data = ctx.getImageData(e.offsetX, e.offsetY, 1, 1);
+	var opts = getDrawingSettings();
+	var data = document.getElementById('layer_' + opts.layer).getContext('2d').getImageData(e.offsetX, e.offsetY, 1, 1);
 	form.colorR.value = data.data[0];
 	form.colorG.value = data.data[1];
 	form.colorB.value = data.data[2];
@@ -109,11 +110,12 @@ function newLayer() {
 
 function handleNewLayer(layer) {
 	layers.push(layer);
-	//document.getElementById('layers').innerHTML += '<canvas id=\'layer_' + layer.id + '\'>';
 	var c = document.createElement('canvas');
 	c.id = 'layer_' + layer.id;
 	c.width = roomOpts.width;
 	c.height = roomOpts.height;
+	c.style.width = Math.floor(roomOpts.width * canvasRatio) + 'px';
+	c.style.height = Math.floor(roomOpts.height * canvasRatio) + 'px';
 	c.className = 'layer';
 	c.style.zIndex = layer.zIndex;
 	document.getElementById('layers').appendChild(c);
@@ -157,15 +159,18 @@ function enableDrawing(layers) {
 	overlay.onmouseup = mouseUp;
 	document.getElementById('layerList').innerHTML = '';
 	document.getElementById('layers').innerHTML = '';
+	updateCanvasSize();
 	for (var i in layers) {
 		handleNewLayer(layers[i]);
 	}
-	overlay.style.width = roomOpts.width + "px";
-	overlay.style.height = roomOpts.height + "px";
+	overlay.style.width = Math.floor(roomOpts.width * canvasRatio) + "px";
+	overlay.style.height = Math.floor(roomOpts.height * canvasRatio) + "px";
 	showHideLayers();
+	window.addEventListener('resize', updateCanvasSize);
 }
 
 function disableDrawing() {
 	drawingAllowed = false;
 	document.getElementById('layerHolder').style.display = "none";
+	window.removeEventListener('resize', updateCanvasSize);
 }

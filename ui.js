@@ -1,3 +1,5 @@
+var canvasRatio = 1.0;
+
 function browserNotSupported() {
 	serviceMessage('Your browser is not supported. Nothing will work.');
 }
@@ -51,6 +53,26 @@ function showHideLayers() {
 		} else {
 			document.getElementById('layer_' + list[i].value).style.display = 'none';
 		}
+	}
+}
+
+function updateCanvasSize() {
+	var availWidth = window.innerWidth - document.getElementById('toolHolder').getElementWidth();
+	var availHeight = window.innerHeight - document.getElementById('chatHolder').getElementHeight();
+	canvasRatio = Math.min(availWidth / roomOpts.width, availHeight / roomOpts.height);
+	if (canvasRatio > 1) {
+		canvasRatio = 1;
+	}
+
+	var cWidth = Math.floor(roomOpts.width * canvasRatio);
+	var cHeight = Math.floor(roomOpts.height * canvasRatio);
+	var list = document.getElementsByClassName('layer');
+
+	for (var i = 0; i < list.length; i++) {
+		// this is quite important: we don't want to change the real sizes of canvases
+		// we only want to scale them, so we change .style.width, not .width
+		list[i].style.width = cWidth + 'px';
+		list[i].style.height = cHeight + 'px';
 	}
 }
 

@@ -1,4 +1,4 @@
-var ws_uri = 'ws://localhost:9000';
+var ws_uri = 'ws://46.109.211.212:9000';
 var ws;
 var connReady = false;
 var handlers = {};
