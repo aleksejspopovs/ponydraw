@@ -25,7 +25,8 @@ class DrawingRoom():
 
 		self.users[user[0]] = {
 			'password': user[1],
-			'mod': mod
+			'mod': mod,
+			'online': False
 		}
 
 	def addLayer(self, owner):
@@ -79,7 +80,7 @@ class DrawingRoom():
 		msg['user'] = user
 		msg['width'] = self.width
 		msg['height'] = self.height
-		msg['users'] = [c for c in self.users]
+		msg['users'] = [c for c in self.users if self.users[c]['online']]
 		msg['layers'] = self.layers
 		return json.dumps(msg)
 
@@ -95,6 +96,21 @@ class DrawingRoom():
 		except KeyError:
 			return false
 
+	def setOnline(self, user, state):
+		msg = {}
+		if (state):
+			self.users[user]['online'] = True
+			msg['type'] = 'userJoined'
+			msg['name'] = user
+			msg['room'] = self.name
+			msg['mod'] = self.users[user]['mod']
+		else:
+			self.users[user]['online'] = False
+			msg['type'] = 'userLeft'
+			msg['name'] = user
+			msg['room'] = self.name
+		return json.dumps(msg)
+
 	def addToHistory(self, msg):
 		self.history.append(msg)
 
@@ -106,26 +122,10 @@ class DrawingRoom():
 		return json.dumps(msg)
 
 
-class BroadcastServerProtocol(WebSocketServerProtocol):
+class PonyDrawServerProtocol(WebSocketServerProtocol):
 	def __init__(self):
 		self.room = None
 		self.name = None
-		self.isMod = False
-
-	def getJoinMessage(self):
-		msg = {}
-		msg['type'] = 'userJoined'
-		msg['name'] = self.name
-		msg['room'] = self.room.name
-		msg['mod'] = self.isMod
-		return json.dumps(msg)
-
-	def getLeaveMessage(self):
-		msg = {}
-		msg['type'] = 'userLeft'
-		msg['name'] = self.name
-		msg['room'] = self.room.name
-		return json.dumps(msg)
 
 	def getChatMessage(self, text):
 		msg = {}
@@ -143,7 +143,7 @@ class BroadcastServerProtocol(WebSocketServerProtocol):
 	def getRemoveLayerFailMessage(self):
 		msg = {}
 		msg['type'] = 'announcement'
-		msg['msg'] = 'Could not remoe layer.'
+		msg['msg'] = 'Could not remove layer.'
 		return json.dumps(msg)
 
 	def onOpen(self):
@@ -163,8 +163,7 @@ class BroadcastServerProtocol(WebSocketServerProtocol):
 			if self.factory.canJoin(message['name'], sha256(message['password']).hexdigest(), message['room']):
 				self.room = self.factory.rooms[message['room']]
 				self.name = message['name']
-				self.isMod = self.room.isMod(self.name)
-				self.factory.broadcast(self.getJoinMessage(), self.room.name, self)
+				self.factory.broadcast(self.room.setOnline(self.name, True), self.room.name, self)
 				self.sendMessage(self.room.getRoomInfo(self.name))
 				msg = {}
 				msg['type'] = 'bunch'
@@ -201,11 +200,13 @@ class BroadcastServerProtocol(WebSocketServerProtocol):
 
 	def connectionLost(self, reason):
 		WebSocketServerProtocol.connectionLost(self, reason)
+		if (self.room):
+			self.factory.broadcast(self.room.setOnline(self.name, False), self.room.name, self)
 		self.factory.unregister(self)
 
 
-class BroadcastServerFactory(WebSocketServerFactory):
-	protocol = BroadcastServerProtocol
+class PonyDrawServerFactory(WebSocketServerFactory):
+	protocol = PonyDrawServerProtocol
 
 	def __init__(self, url):
 		WebSocketServerFactory.__init__(self, url)
@@ -220,19 +221,17 @@ class BroadcastServerFactory(WebSocketServerFactory):
 	def unregister(self, client):
 		if client in self.clients:
 			print "unregistered client " + client.peerstr
-			if (client.room != None):
-				self.broadcast(client.getLeaveMessage(), client.room, client)
 			self.clients.remove(client)
 
 	def broadcast(self, msg, room, exc):
 		print "broadcasting message '%s' to members of room %s.." % (msg, room)
 		for c in self.clients:
-			if (c.room.name == room) and (c != exc):
+			if (c.room != None) and (c.room.name == room) and (c != exc):
 				c.sendMessage(msg)
 
 	def canJoin(self, user, password, room):
 		if (room not in self.rooms):
-			self.rooms[room] = DrawingRoom(room, (user, password), 640, 480)
+			self.rooms[room] = DrawingRoom(room, (user, password), 1024, 768)
 		if (not self.rooms[room].getUser(user)):
 			self.rooms[room].addUser((user, password))
 
@@ -241,6 +240,6 @@ class BroadcastServerFactory(WebSocketServerFactory):
 
 if __name__ == '__main__':
 	log.startLogging(sys.stdout)
-	factory = BroadcastServerFactory("ws://localhost:9000")
+	factory = PonyDrawServerFactory("ws://127.0.0.1:9000")
 	listenWS(factory)
 	reactor.run()

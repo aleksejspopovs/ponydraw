@@ -1,4 +1,4 @@
-var ws_uri = 'ws://46.109.211.212:9000';
+var wsPort = 9000;//'ws://localhost:9000';
 var ws;
 var connReady = false;
 var handlers = {};
@@ -22,10 +22,12 @@ function messageHandler(e) {
 }
 
 function initWebSocket() {
+	var wsURI = 'ws://' + (document.location.protocol == 'file:' ? 'localhost' : document.location.host) + ':' + wsPort;
+
 	if ('WebSocket' in window) {
-		ws = new WebSocket(ws_uri);
+		ws = new WebSocket(wsURI);
 	}	else if ('MozWebSocket' in window) {
-		ws = new MozWebSocket(ws_uri);
+		ws = new MozWebSocket(wsURI);
 	} else {
 		browserNotSupported();
 		return;
