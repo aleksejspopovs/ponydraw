@@ -5,7 +5,7 @@ from autobahn.websocket import WebSocketServerFactory, WebSocketServerProtocol, 
 from hashlib import sha256
 from cgi import escape
 
-MAX_LAYERS_PER_USER = 3
+MAX_LAYERS_PER_USER = 5
 
 class DrawingRoom():
 	def __init__(self, name, creator, w, h):
@@ -65,6 +65,33 @@ class DrawingRoom():
 			return rip
 		else:
 			return False
+
+	def swapLayers(self, aId, bId, user):
+		try:
+			self.layers[aId]
+			self.layers[bId]
+		except KeyError:
+			return False
+
+		if self.users[user]['mod'] or self.layers[aId]['owner'] == user or self.layers[bId]['owner'] == user:
+			res = []
+			tmp = self.layers[aId]['zIndex']
+			self.layers[aId]['zIndex'] = self.layers[bId]['zIndex']
+			res.append({
+				'type': 'changeZIndex',
+				'id': aId,
+				'zIndex': self.layers[bId]['zIndex']
+			})
+			self.layers[bId]['zIndex'] = tmp
+			res.append({
+				'type': 'changeZIndex',
+				'id': bId,
+				'zIndex': tmp
+			})
+			return res
+		else:
+			return False
+
 
 	def getUser(self, which):
 		if (which not in self.users):
@@ -140,12 +167,6 @@ class PonyDrawServerProtocol(WebSocketServerProtocol):
 		msg['msg'] = 'Could not create new layer.'
 		return json.dumps(msg)
 
-	def getRemoveLayerFailMessage(self):
-		msg = {}
-		msg['type'] = 'announcement'
-		msg['msg'] = 'Could not remove layer.'
-		return json.dumps(msg)
-
 	def onOpen(self):
 		self.factory.register(self)
 
@@ -194,8 +215,13 @@ class PonyDrawServerProtocol(WebSocketServerProtocol):
 				res['who'] = self.name
 				res['type'] = 'removeLayer'
 				self.factory.broadcast(json.dumps(res), self.room.name, None)
-			else:
-				self.sendMessage(self.getRemoveLayerFailMessage())
+		elif (message['type'] == 'swapLayers'):
+			res = self.room.swapLayers(message['aId'], message['bId'], self.name)
+			if (res):
+				for i in res:
+					self.factory.broadcast(json.dumps(i), self.room.name, None)
+				self.factory.broadcast(msg, self.room.name, None)
+
 
 
 	def connectionLost(self, reason):
