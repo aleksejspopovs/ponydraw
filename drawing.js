@@ -247,12 +247,12 @@ function enableDrawing(l) {
 	overlay.onmouseup = mouseUp;
 	document.getElementById('layerList').innerHTML = '';
 	document.getElementById('layers').innerHTML = '';
+	overlay.width = roomOpts.width;
+	overlay.height = roomOpts.height;
 	updateCanvasSize();
 	for (var i in l) {
 		handleNewLayer(l[i]);
 	}
-	overlay.style.width = Math.floor(roomOpts.width * canvasRatio) + "px";
-	overlay.style.height = Math.floor(roomOpts.height * canvasRatio) + "px";
 	showHideLayers();
 	window.addEventListener('resize', updateCanvasSize);
 }

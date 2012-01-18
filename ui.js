@@ -39,7 +39,6 @@ function updateToolsPreview() {
 	ctx.lineTo(ctx.canvas.width, Math.round(ctx.canvas.height / 2));
 	ctx.stroke();
 }
-
 function showHideLayers() {
 	var list = document.forms.drawingSettings.show;
 
@@ -76,6 +75,32 @@ function updateCanvasSize() {
 	}
 }
 
+function showCursor(e) {
+	document.getElementById('touchOverlay').addEventListener('mousemove', moveCursor);
+	moveCursor(e);
+}
+
+function hideCursor(e) {
+	document.getElementById('touchOverlay').removeEventListener('mousemove', moveCursor);
+	var ctx = document.getElementById('touchOverlay').getContext('2d');
+	ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+}
+
+function moveCursor(e) {
+	var point = getCoords(e);
+	var ctx = document.getElementById('touchOverlay').getContext('2d');
+	ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+	ctx.strokeStyle = 'rgba(0, 0, 0, 1)';
+	ctx.lineWidth = 1;
+	ctx.fillStyle = 'rgba(255, 255, 0, 0.3)';
+	ctx.beginPath();
+	//ctx.moveTo(point.x, point.y);
+	ctx.arc(point.x, point.y, document.forms.drawingSettings.thickness.value / 2, 0, Math.PI*2, false);
+	ctx.closePath();
+	ctx.stroke();
+	ctx.fill();
+}
+
 function initUI() {
 	document.forms.join.onsubmit = joinRoom;
 	document.forms.chatMsg.onsubmit = sendChatMessage;
@@ -86,4 +111,7 @@ function initUI() {
 	if (document.location.hash != '') {
 		document.forms.join.room.value = document.location.hash.slice(1);
 	}
+
+	document.getElementById('touchOverlay').addEventListener('mouseover', showCursor);
+	document.getElementById('touchOverlay').addEventListener('mouseout', hideCursor);
 }

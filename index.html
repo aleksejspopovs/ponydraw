@@ -69,13 +69,24 @@
 			font-size: 14pt;
 			font-variant: small-caps;
 		}
+		#cursor {
+			width: 1px;
+			height: 1px;
+			border-radius: 50%;
+			background: rgba(0, 0, 0, 0.3);
+			position: absolute;
+			top: 0px;
+			left: 0px;
+			display: none;
+			z-index: 1001;
+		}
 		</style>
 	</head>
 	<body>
 		<div id='layerHolder'>
 			<span id='layers'>
 			</span>
-			<div class='layer touchOverlay' id='touchOverlay'></div>
+			<canvas class='layer touchOverlay' id='touchOverlay'></canvas>
 		</div>
 		<div id='chatHolder'>
 			<form name='join'>
