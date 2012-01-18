@@ -11,6 +11,13 @@ function initDrawing() {
 	document.getElementById('newLayer').onclick = newLayer;
 }
 
+function getCoords(e) {
+	return {
+		x: Math.round((e.offsetX >= 0 ? e.offsetX : e.layerX) / canvasRatio),
+		y: Math.round((e.offsetY >= 0 ? e.offsetY : e.layerY) / canvasRatio)
+	}
+}
+
 function getDrawingSettings() {
 	var res = {};
 	res.strokeStyle = 'rgba(' + form.colorR.value + ',' + form.colorG.value + ',' + form.colorB.value + ', ' + (form.colorA.value / 100) + ')';
@@ -27,32 +34,28 @@ function getDrawingSettings() {
 
 function mouseDown(e) {
 	e.preventDefault();
-	if (form.tool.item('pencil').checked) {
-		lastPoint = {
-			x: (e.offsetX >= 0 ? e.offsetX : e.layerX) / canvasRatio,
-			y: (e.offsetY >= 0 ? e.offsetY : e.layerY) / canvasRatio
-		};
+	if (form.tool.pencil.checked) {
+		lastPoint = getCoords(e);
 		overlay.addEventListener("mousemove", drawHandler);
 		drawHandler(e);
-	} else if (form.tool.item('picker').checked) {
+	} else if (form.tool.picker.checked) {
 		overlay.addEventListener("mousemove", pickerHandler);
 		pickerHandler(e);
 	}
 }
 
 function mouseUp(e) {
-	if (form.tool.item('pencil').checked){
+	if (form.tool.pencil.checked){
 		painting = false;
 		overlay.removeEventListener("mousemove", drawHandler);
+	} else if (form.tool.picker.checked) {
+		overlay.removeEventListener("mousemove", pickerHandler);
 	}
 }
 
 function drawHandler(e) {
 	e.preventDefault();
-	var point = {
-		x: (e.offsetX >= 0 ? e.offsetX : e.layerX) / canvasRatio,
-		y: (e.offsetY >= 0 ? e.offsetY : e.layerY) / canvasRatio
-	};
+	point = getCoords(e)
 	var opts = getDrawingSettings();
 
 	if (opts.layer === undefined) {
@@ -65,8 +68,9 @@ function drawHandler(e) {
 }
 
 function pickerHandler(e) {
+	point = getCoords(e)
 	var opts = getDrawingSettings();
-	var data = document.getElementById('layer_' + opts.layer).getContext('2d').getImageData(e.offsetX, e.offsetY, 1, 1);
+	var data = document.getElementById('layer_' + opts.layer).getContext('2d').getImageData(point.x, point.y, 1, 1);
 	form.colorR.value = data.data[0];
 	form.colorG.value = data.data[1];
 	form.colorB.value = data.data[2];
@@ -110,6 +114,14 @@ function newLayer() {
 
 function handleNewLayer(layer) {
 	layers.push(layer);
+	layers.sort(layerSorter);
+	var next;
+	for (var i = 0; i < layers.length; i++) {
+		if (layers[i].id == layer.id) {
+			next = (i + 1 < layers.length) ? document.getElementById('label_' + layers[i + 1].id) : false;
+		}
+	}
+
 	var c = document.createElement('canvas');
 	c.id = 'layer_' + layer.id;
 	c.width = roomOpts.width;
@@ -123,12 +135,88 @@ function handleNewLayer(layer) {
 	var l = document.createElement('label');
 	l.id = 'label_' + layer.id;
 	l.innerHTML = '<input type=\'radio\' name=\'active\' ' + (layer.owner != roomOpts.user ? 'disabled' : '') + ' id=\'i' + layer.id + '\'>'
-		+ '<input type=\'checkbox\' name=\'show\' value=\'' + layer.id + '\' checked>'
-		+ layer.name + ((layer.owner == roomOpts.user || roomOpts.mod) ? ' <a href=\'javascript:void(0)\' onclick=\'removeLayer(' + layer.id + ');\'>×</a>' : '') + '<br />';
-	document.getElementById('layerList').appendChild(l);
+		+ '<input type=\'checkbox\' name=\'show\' value=\'' + layer.id + '\' checked>' + layer.name
+		+ ((layer.owner == roomOpts.user || roomOpts.mod) ? ' <a href=\'javascript:void(0)\' onclick=\'removeLayer(' + layer.id + ');\'>×</a>'
+		+ ' <a href=\'javascript:void(0)\' onclick=\'layerShiftUp(' + layer.id + ')\'>↑</a>'
+		+ ' <a href=\'javascript:void(0)\' onclick=\'layerShiftDown(' + layer.id + ')\'>↓</a>' : '')
+		+ '<br />';
+
+	if (!next) {
+		document.getElementById('layerList').appendChild(l);
+	} else {
+		document.getElementById('layerList').insertBefore(l, next);
+	}
 }
 
 handlers['newLayer'] = handleNewLayer;
+
+function layerShiftUp(id) {
+	var order;
+	for (var i = 0; i < layers.length; i++) {
+		if (layers[i].id == id) {
+			order = i;
+		}
+	}
+	if (order == 0) {
+		return;
+	}
+
+	var msg = {
+		type: 'swapLayers',
+		aId: layers[order - 1].id,
+		bId: id
+	};
+	ws.send(JSON.stringify(msg));
+}
+
+function layerShiftDown(id) {
+	var order;
+	for (var i = 0; i < layers.length; i++) {
+		if (layers[i].id == id) {
+			order = i;
+		}
+	}
+	if (order == layers.length - 1) {
+		return;
+	}
+
+	var msg = {
+		type: 'swapLayers',
+		aId: layers[order + 1].id,
+		bId: id
+	};
+	ws.send(JSON.stringify(msg));
+}
+
+function handleSwapLayers(msg) {
+	var aId = msg.aId;
+	var bId = msg.bId;
+	var list = document.getElementById('layerList');
+	var tmpEl1 = document.createElement('span');
+	tmpEl1.id = 'layer_tmp1';
+	list.insertBefore(tmpEl1, document.getElementById('label_' + aId));
+	var tmpEl2 = document.createElement('span');
+	tmpEl2.id = 'layer_tmp2';
+	list.insertBefore(tmpEl2, document.getElementById('label_' + bId));
+
+	list.replaceChild(document.getElementById('label_' + aId), tmpEl2);
+	list.replaceChild(document.getElementById('label_' + bId), tmpEl1);
+	layers.sort(layerSorter);
+}
+
+handlers['swapLayers'] = handleSwapLayers;
+
+function handleChangeZIndex(msg) {
+	for (var i = 0; i < layers.length; i++) {
+		if (layers[i].id == msg.id) {
+			break;
+		}
+	}
+	layers[i].zIndex = msg.zIndex;
+	document.getElementById('layer_' + msg.id).style.zIndex = msg.zIndex;
+}
+
+handlers['changeZIndex'] = handleChangeZIndex;
 
 function removeLayer(id) {
 	var msg = {
@@ -152,7 +240,7 @@ function handleRemoveLayer(msg) {
 
 handlers['removeLayer'] = handleRemoveLayer;
 
-function enableDrawing(layers) {
+function enableDrawing(l) {
 	drawingAllowed = true;
 	document.getElementById('layerHolder').style.display = "block";
 	overlay.onmousedown = mouseDown;
@@ -160,8 +248,8 @@ function enableDrawing(layers) {
 	document.getElementById('layerList').innerHTML = '';
 	document.getElementById('layers').innerHTML = '';
 	updateCanvasSize();
-	for (var i in layers) {
-		handleNewLayer(layers[i]);
+	for (var i in l) {
+		handleNewLayer(l[i]);
 	}
 	overlay.style.width = Math.floor(roomOpts.width * canvasRatio) + "px";
 	overlay.style.height = Math.floor(roomOpts.height * canvasRatio) + "px";

@@ -10,15 +10,16 @@ function chatMessage(author, msg) {
 
 function sendChatMessage(e) {
 	e.preventDefault();
-	if (e.srcElement.elements.msg.value == '') {
+	var form = document.forms.chatMsg;
+	if (form.msg.value == '') {
 		return;
 	}
 	var msg = {
 		type: 'chat',
-		msg: e.srcElement.elements.msg.value
+		msg: form.msg.value
 	}
 	ws.send(JSON.stringify(msg));
-	e.srcElement.elements.msg.value = '';
+	form.msg.value = '';
 }
 
 function handleChatMessage(msg) {

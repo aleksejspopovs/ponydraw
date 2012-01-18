@@ -21,3 +21,7 @@ Element.prototype.getElementHeight = function() {
 		}
 	}
 };
+
+function layerSorter(a, b) {
+	return (a.zIndex - b.zIndex);
+}
