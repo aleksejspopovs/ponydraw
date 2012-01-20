@@ -22,7 +22,7 @@ function messageHandler(e) {
 }
 
 function initWebSocket() {
-	var wsURI = 'ws://' + (document.location.protocol == 'file:' ? 'localhost' : document.location.host) + ':' + wsPort;
+	var wsURI = 'ws://' + (document.location.protocol == 'file:' ? 'localhost' : document.location.hostname) + ':' + wsPort;
 
 	if ('WebSocket' in window) {
 		ws = new WebSocket(wsURI);
