@@ -56,11 +56,7 @@ class DrawingRoom():
 			rip = self.layers[id]
 			del self.layers[id]
 
-			deleted = 0
-			for i in xrange(len(self.history)):
-				if (json.loads(self.history[i - deleted])['opts']['layer'] == id):
-					del self.history[i - deleted]
-					deleted += 1
+			self.history = reduce(lambda prev, cur: (json.loads(cur)['opts']['layer'] != id) and (prev + [cur]) or (prev), self.history, [])
 
 			return rip
 		else:

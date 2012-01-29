@@ -30,7 +30,7 @@ function updateToolsPreview() {
 	form.colorR.value = (parseInt(form.colorR.value) ? form.colorR.value : 0);
 	form.colorG.value = (parseInt(form.colorG.value) ? form.colorG.value : 0);
 	form.colorB.value = (parseInt(form.colorB.value) ? form.colorB.value : 0);
-	form.colorA.value = (parseInt(form.colorA.value) ? form.colorA.value : 100);
+	form.colorA.value = (parseInt(form.colorA.value) !== undefined ? form.colorA.value : 100);
 
 	ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
 	ctx.strokeStyle = 'rgba(' + form.colorR.value + ',' + form.colorG.value + ',' + form.colorB.value + ', ' + (form.colorA.value / 100) + ')';

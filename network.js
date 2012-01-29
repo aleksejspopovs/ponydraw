@@ -1,4 +1,4 @@
-var wsPort = 9000;//'ws://localhost:9000';
+var wsPort = 9000;
 var ws;
 var connReady = false;
 var handlers = {};

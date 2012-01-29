@@ -18,10 +18,20 @@ function getCoords(e) {
 	}
 }
 
+function getTool() {
+	for (var i = 0; i < form.tool.length; i++) {
+		if (form.tool[i].checked) {
+			return form.tool[i].value;
+		}
+	}
+	return '';
+}
+
 function getDrawingSettings() {
 	var res = {};
 	res.strokeStyle = 'rgba(' + form.colorR.value + ',' + form.colorG.value + ',' + form.colorB.value + ', ' + (form.colorA.value / 100) + ')';
 	res.lineWidth = form.thickness.value;
+	res.erase = (getTool() == 'eraser');
 
 	for (var i = 0; i < layers.length; i++) {
 		if (document.getElementById('i' + layers[i].id).checked) {
@@ -34,22 +44,29 @@ function getDrawingSettings() {
 
 function mouseDown(e) {
 	e.preventDefault();
-	if (form.tool.pencil.checked) {
-		lastPoint = getCoords(e);
-		overlay.addEventListener("mousemove", drawHandler);
-		drawHandler(e);
-	} else if (form.tool.picker.checked) {
-		overlay.addEventListener("mousemove", pickerHandler);
-		pickerHandler(e);
+	switch (getTool()) {
+		case 'pencil':
+		case 'eraser':
+			lastPoint = getCoords(e);
+			overlay.addEventListener("mousemove", drawHandler);
+			drawHandler(e);
+		break;
+		case 'picker':
+			overlay.addEventListener("mousemove", pickerHandler);
+			pickerHandler(e);
+		break;
 	}
 }
 
 function mouseUp(e) {
-	if (form.tool.pencil.checked){
-		painting = false;
-		overlay.removeEventListener("mousemove", drawHandler);
-	} else if (form.tool.picker.checked) {
-		overlay.removeEventListener("mousemove", pickerHandler);
+	switch (getTool()) {
+		case 'pencil':
+		case 'eraser':
+			overlay.removeEventListener("mousemove", drawHandler);
+		break;
+		case 'picker':
+			overlay.removeEventListener("mousemove", pickerHandler);
+		break
 	}
 }
 
@@ -68,25 +85,48 @@ function drawHandler(e) {
 }
 
 function pickerHandler(e) {
-	point = getCoords(e)
+	point = getCoords(e);
 	var opts = getDrawingSettings();
-	var data = document.getElementById('layer_' + opts.layer).getContext('2d').getImageData(point.x, point.y, 1, 1);
+	var tmpC = document.createElement('canvas');
+	tmpC.width = 1;
+	tmpC.height = 1;
+	var ctx = tmpC.getContext('2d');
+	ctx.clearRect(0, 0, 1, 1);
+	for (var i = layers.length - 1; i >= 0; i--) {
+		var cur = document.getElementById('layer_' + layers[i].id);
+		if (cur.style.display == 'block') {
+			var curData = cur.getContext('2d').getImageData(point.x, point.y, 1, 1);
+			// we can't just put the curData onto tmpC, becasue putImageData ignores blending
+			ctx.fillStyle = 'rgba('+ curData.data[0] + ',' + curData.data[1] + ',' + curData.data[2] + ',' + (curData.data[3] / 100) +')';
+			ctx.fillRect(0, 0, 1, 1);
+		}
+	}
+	var data = ctx.getImageData(0, 0, 1, 1);
+
 	form.colorR.value = data.data[0];
 	form.colorG.value = data.data[1];
 	form.colorB.value = data.data[2];
-	form.colorA.value = data.data[3];
+	form.colorA.value = Math.round(data.data[3] / 255 * 100);
 	updateToolsPreview();
 }
 
 function drawLine(from, to, opts) {
 	var ctx = document.getElementById('layer_' + opts.layer).getContext('2d');
-	ctx.lineCap = "round";
-	ctx.strokeStyle = opts.strokeStyle;
-	ctx.lineWidth = opts.lineWidth;
 	ctx.beginPath();
+	if (opts.erase) {
+		ctx.globalCompositeOperation = 'destination-out';
+		ctx.strokeStyle = 'rgba(0, 0, 0, 1)';
+	} else {
+		ctx.globalCompositeOperation = 'source-over';
+		ctx.strokeStyle = opts.strokeStyle;
+	}
+
+	ctx.lineCap = "round";
+	ctx.lineWidth = opts.lineWidth;
 	ctx.moveTo(from.x, from.y);
 	ctx.lineTo(to.x, to.y);
 	ctx.stroke();
+	ctx.closePath();
 }
 
 function handleLine(msg) {

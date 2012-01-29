@@ -44,6 +44,11 @@
 			top: 0px;
 			left: 0px;
 		}
+		.checkers {
+			background: url('./checkers.png') repeat;
+			z-index: -1;
+		}
+
 		.touchOverlay {
 			cursor: none;
 			z-index: 100000;
@@ -85,9 +90,10 @@
 	</head>
 	<body>
 		<div id='layerHolder'>
+			<div class='layer checkers'></div>
 			<span id='layers'>
 			</span>
-			<canvas class='layer touchOverlay' id='touchOverlay'></canvas>
+			<div class='layer touchOverlay' id='touchOverlay'></div>
 			<div id='cursor'></div>
 		</div>
 		<div id='chatHolder'>
@@ -106,8 +112,9 @@
 		<div id='toolHolder'>
 			<form name='drawingSettings'>
 				<strong>Tool:</strong><br />
-				<label><input type='radio' name='tool' id='pencil' checked>Pencil</label>
-				<label><input type='radio' name='tool' id='picker'>Color picker</label>
+				<label><input type='radio' name='tool' value='pencil' checked>Pencil</label>
+				<label><input type='radio' name='tool' value='eraser'>Eraser</label>
+				<label><input type='radio' name='tool' value='picker'>Color picker</label>
 				<br />
 				<strong>Options:</strong><br />
 				Line thickness: <input type='number' name='thickness' min='1' max='15' value='3'><br />
