@@ -141,13 +141,6 @@ class DrawingRoom():
 	def addToHistory(self, msg):
 		self.history.append(msg)
 
-	def getAuthFailMessage(self, room):
-		msg = {}
-		msg['type'] = 'joinFailure'
-		msg['room'] = room
-		msg['error'] = 'Wrong password'
-		return json.dumps(msg)
-
 
 class PonyDrawServerProtocol(WebSocketServerProtocol):
 	def __init__(self):
@@ -262,6 +255,13 @@ class PonyDrawServerFactory(WebSocketServerFactory):
 			self.rooms[room].addUser((user, password))
 
 		return self.rooms[room].getUser(user)['password'] == password
+
+	def getAuthFailMessage(self, room):
+		msg = {}
+		msg['type'] = 'joinFailure'
+		msg['room'] = room
+		msg['error'] = 'Wrong password'
+		return json.dumps(msg)
 
 
 if __name__ == '__main__':

@@ -45,7 +45,7 @@
 			left: 0px;
 		}
 		.touchOverlay {
-			z-index: 1000;
+			z-index: 100000;
 			border-right: 1px solid;
 			border-bottom: 1px solid;
 		}
@@ -78,7 +78,7 @@
 			top: 0px;
 			left: 0px;
 			display: none;
-			z-index: 1001;
+			z-index: 99999;
 		}
 		</style>
 	</head>
@@ -87,6 +87,7 @@
 			<span id='layers'>
 			</span>
 			<canvas class='layer touchOverlay' id='touchOverlay'></canvas>
+			<div id='cursor'></div>
 		</div>
 		<div id='chatHolder'>
 			<form name='join'>

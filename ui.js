@@ -76,29 +76,27 @@ function updateCanvasSize() {
 }
 
 function showCursor(e) {
-	document.getElementById('touchOverlay').addEventListener('mousemove', moveCursor);
+	document.getElementById('cursor').style.display = 'block';
 	moveCursor(e);
+	document.getElementById('touchOverlay').addEventListener('mousemove', moveCursor);
 }
 
 function hideCursor(e) {
+	document.getElementById('cursor').style.display = 'none';
 	document.getElementById('touchOverlay').removeEventListener('mousemove', moveCursor);
-	var ctx = document.getElementById('touchOverlay').getContext('2d');
-	ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
 }
 
 function moveCursor(e) {
-	var point = getCoords(e);
-	var ctx = document.getElementById('touchOverlay').getContext('2d');
-	ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-	ctx.strokeStyle = 'rgba(0, 0, 0, 1)';
-	ctx.lineWidth = 1;
-	ctx.fillStyle = 'rgba(255, 255, 0, 0.3)';
-	ctx.beginPath();
-	//ctx.moveTo(point.x, point.y);
-	ctx.arc(point.x, point.y, document.forms.drawingSettings.thickness.value / 2, 0, Math.PI*2, false);
-	ctx.closePath();
-	ctx.stroke();
-	ctx.fill();
+	var cursor = document.getElementById('cursor');
+	var size = getDrawingSettings().lineWidth * canvasRatio;
+	cursor.style.width = Math.round(size) + 'px';
+	cursor.style.height = Math.round(size) + 'px';
+
+	var x = (e.offsetX >= 0 ? e.offsetX : e.layerX) - Math.round(size / 2);
+	var y = (e.offsetY >= 0 ? e.offsetY : e.layerY) - Math.round(size / 2);
+
+	cursor.style.top = y + 'px';
+	cursor.style.left = x + 'px';
 }
 
 function initUI() {
