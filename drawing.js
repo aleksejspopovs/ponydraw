@@ -1,13 +1,11 @@
 var drawingAllowed = false;
 var overlay;
 var lastPoint;
-var form;
 var layers = [];
 
 function initDrawing() {
 	disableDrawing();
 	overlay = document.getElementById('touchOverlay');
-	form = document.forms.drawingSettings.elements;
 	document.getElementById('newLayer').onclick = newLayer;
 }
 
@@ -29,7 +27,7 @@ function getTool() {
 
 function getDrawingSettings() {
 	var res = {};
-	res.strokeStyle = 'rgba(' + form.colorR.value + ',' + form.colorG.value + ',' + form.colorB.value + ', ' + (form.colorA.value / 100) + ')';
+	res.strokeStyle = 'rgb(' + form.colorR.value + ',' + form.colorG.value + ',' + form.colorB.value + ')';
 	res.lineWidth = form.thickness.value;
 	res.erase = (getTool() == 'eraser');
 
@@ -106,8 +104,7 @@ function pickerHandler(e) {
 	form.colorR.value = data.data[0];
 	form.colorG.value = data.data[1];
 	form.colorB.value = data.data[2];
-	form.colorA.value = Math.round(data.data[3] / 255 * 100);
-	updateToolsPreview();
+	updateToolsPreview(true);
 }
 
 function drawLine(from, to, opts) {

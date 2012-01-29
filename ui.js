@@ -1,4 +1,6 @@
 var canvasRatio = 1.0;
+var picker;
+var form;
 
 function browserNotSupported() {
 	serviceMessage('Your browser is not supported. Nothing will work.');
@@ -23,22 +25,24 @@ function setCanvasSize(width, height) {
 	}
 }
 
-function updateToolsPreview() {
+function updateToolsPreview(e) {
 	var ctx = document.getElementById('toolsPreview').getContext('2d');
-	var form = document.forms.drawingSettings.elements;
 
 	form.colorR.value = (parseInt(form.colorR.value) ? form.colorR.value : 0);
 	form.colorG.value = (parseInt(form.colorG.value) ? form.colorG.value : 0);
 	form.colorB.value = (parseInt(form.colorB.value) ? form.colorB.value : 0);
-	form.colorA.value = (parseInt(form.colorA.value) !== undefined ? form.colorA.value : 100);
+	if (e) {
+		picker.setRgb({r: form.colorR.value, g: form.colorG.value, b: form.colorB.value});
+	}
 
 	ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-	ctx.strokeStyle = 'rgba(' + form.colorR.value + ',' + form.colorG.value + ',' + form.colorB.value + ', ' + (form.colorA.value / 100) + ')';
+	ctx.strokeStyle = 'rgb(' + form.colorR.value + ',' + form.colorG.value + ',' + form.colorB.value + ')';
 	ctx.lineWidth = form.thickness.value;
 	ctx.moveTo(0, Math.round(ctx.canvas.height / 2));
 	ctx.lineTo(ctx.canvas.width, Math.round(ctx.canvas.height / 2));
 	ctx.stroke();
 }
+
 function showHideLayers() {
 	var list = document.forms.drawingSettings.show;
 
@@ -99,12 +103,25 @@ function moveCursor(e) {
 	cursor.style.left = x + 'px';
 }
 
+function pickerCallback(hex, hsv, rgb, mousePicker, mouseSlide) {
+	form.colorR.value = Math.round(rgb.r);
+	form.colorG.value = Math.round(rgb.g);
+	form.colorB.value = Math.round(rgb.b);
+	updateToolsPreview();
+}
+
 function initUI() {
+	form = document.forms.drawingSettings.elements;
 	document.forms.join.onsubmit = joinRoom;
 	document.forms.chatMsg.onsubmit = sendChatMessage;
 	document.forms.drawingSettings.addEventListener('input', updateToolsPreview);
 	document.forms.drawingSettings.addEventListener('change', showHideLayers);
-	updateToolsPreview();
+	picker = ColorPicker(
+		document.getElementById('slide-wrapper'),
+		document.getElementById('picker-wrapper'),
+		pickerCallback
+	);
+	updateToolsPreview(true);
 
 	if (document.location.hash != '') {
 		document.forms.join.room.value = document.location.hash.slice(1);

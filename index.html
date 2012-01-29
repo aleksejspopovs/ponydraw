@@ -3,90 +3,21 @@
 	<head>
 		<title>PonyDraw</title>
 		<meta http-equiv='Content-Type' content='text/html; charset=utf-8'>
-		<script type='text/javascript' src='hacks.js'></script>
-		<script type='text/javascript' src='network.js'></script>
-		<script type='text/javascript' src='ui.js'></script>
-		<script type='text/javascript' src='chat.js'></script>
-		<script type='text/javascript' src='drawing.js'></script>
+		<script src='colorpicker.js'></script>
+		<script src='hacks.js'></script>
+		<script src='network.js'></script>
+		<script src='ui.js'></script>
+		<script src='chat.js'></script>
+		<script src='drawing.js'></script>
 		<script type='text/javascript'>
-			var curRoom, name;
-
 			window.onload = function() {
 				initWebSocket();
 				initUI();
 				initDrawing();
 			}
 		</script>
-		<style>
-		body {
-			padding: 0px;
-			margin: 0px;
-		}
-		#chat {
-			height: 7em;
-			overflow-y: scroll;
-		}
-		.serviceMsg {
-			color: gray;
-			font-style: italic;
-		}
-
-		#layerHolder {
-			position: absolute;
-			top: 0px;
-			left: 0px;
-			right: 250px;
-			bottom: 160px;
-		}
-
-		.layer {
-			position: absolute;
-			top: 0px;
-			left: 0px;
-		}
-		.checkers {
-			background: url('./checkers.png') repeat;
-			z-index: -1;
-		}
-
-		.touchOverlay {
-			cursor: none;
-			z-index: 100000;
-			border-right: 1px solid;
-			border-bottom: 1px solid;
-		}
-
-		#chatHolder {
-			border-top: 1px solid;
-			position: absolute;
-			bottom: 0px;
-			right: 250px;
-			left: 0px;
-			height: 160px;
-		}
-		#toolHolder {
-			border-left: 1px solid;
-			position: absolute;
-			right: 0px;
-			height: 100%;
-			width: 250px;
-		}
-		strong {
-			font-size: 14pt;
-			font-variant: small-caps;
-		}
-		#cursor {
-			width: 1px;
-			height: 1px;
-			border-radius: 50%;
-			background: rgba(0, 0, 0, 0.3);
-			position: absolute;
-			top: 0px;
-			left: 0px;
-			display: none;
-			z-index: 99999;
-		}
-		</style>
+		<link rel='stylesheet' href='picker.css'></link>
+		<link rel='stylesheet' href='style.css'></link>
 	</head>
 	<body>
 		<div id='layerHolder'>
@@ -118,11 +49,14 @@
 				<br />
 				<strong>Options:</strong><br />
 				Line thickness: <input type='number' name='thickness' min='1' max='15' value='3'><br />
-				Color (in RGBA):<br />
+				Color:<br />
+				<div class='cp-small'>
+					<div class='picker-wrapper' id='picker-wrapper'></div>
+					<div class='slide-wrapper' id='slide-wrapper'></div>
+				</div>
 				<input type='number' name='colorR' min='0' max='255' step='10' value='0'>
 				<input type='number' name='colorG' min='0' max='255' step='10' value='0'>
 				<input type='number' name='colorB' min='0' max='255' step='10' value='0'>
-				<input type='number' name='colorA' min='0' max='100' step='5' value='100'><br />
 				<canvas id='toolsPreview' width='250' height='40'></canvas><br />
 				<strong>Layers:</strong><br />
 				<div id='layerList'>

@@ -1,0 +1,74 @@
+body {
+	padding: 0px;
+	margin: 0px;
+}
+
+#chat {
+	height: 7em;
+	overflow-y: scroll;
+}
+
+.serviceMsg {
+	color: gray;
+	font-style: italic;
+}
+
+#layerHolder {
+	position: absolute;
+	top: 0px;
+	left: 0px;
+	right: 250px;
+	bottom: 160px;
+}
+
+.layer {
+	position: absolute;
+	top: 0px;
+	left: 0px;
+}
+
+.checkers {
+	background: url('./checkers.png') repeat;
+	z-index: -1;
+}
+
+.touchOverlay {
+	cursor: none;
+	z-index: 100000;
+	border-right: 1px solid;
+	border-bottom: 1px solid;
+}
+
+#chatHolder {
+	border-top: 1px solid;
+	position: absolute;
+	bottom: 0px;
+	right: 250px;
+	left: 0px;
+	height: 160px;
+}
+
+#toolHolder {
+	border-left: 1px solid;
+	position: absolute;
+	right: 0px;
+	height: 100%;
+	width: 250px;
+}
+
+strong {
+	font-size: 14pt;
+	font-variant: small-caps;
+}
+
+#cursor {
+	width: 1px;
+	height: 1px;
+	border-radius: 50%;
+	background: rgba(0, 0, 0, 0.3);
+	position: absolute;
+	top: 0px;
+	left: 0px;
+	display: none;
+	z-index: 99999;
+}
