@@ -92,7 +92,7 @@ function pickerHandler(e) {
 	ctx.clearRect(0, 0, 1, 1);
 	for (var i = layers.length - 1; i >= 0; i--) {
 		var cur = document.getElementById('layer_' + layers[i].id);
-		if (cur.style.display == 'block') {
+		if (cur.style.display != 'none') {
 			var curData = cur.getContext('2d').getImageData(point.x, point.y, 1, 1);
 			// we can't just put the curData onto tmpC, becasue putImageData ignores blending
 			ctx.fillStyle = 'rgba('+ curData.data[0] + ',' + curData.data[1] + ',' + curData.data[2] + ',' + (curData.data[3] / 100) +')';
@@ -100,7 +100,6 @@ function pickerHandler(e) {
 		}
 	}
 	var data = ctx.getImageData(0, 0, 1, 1);
-
 	form.colorR.value = data.data[0];
 	form.colorG.value = data.data[1];
 	form.colorB.value = data.data[2];
