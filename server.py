@@ -209,13 +209,13 @@ class PonyDrawServerProtocol(WebSocketServerProtocol):
 				self.name = message['name']
 				self.factory.broadcast(self.room.setOnline(self.name, True), self.room.name, self)
 				self.sendMessage(dict(self.room.getRoomInfo(self.name.items()) + {'name': self.name}))
-				msg = {}
-				msg['type'] = 'bunch'
-				msg['contents'] = []
-				for i in self.room.layers:
-					for j in self.room.layers[i].history:
+				for j in self.room.layers[i].history:
+					msg = {}
+					msg['type'] = 'bunch'
+					msg['contents'] = []
+					for i in self.room.layers:
 						msg['contents'].append(json.loads(j))
-				self.sendMessage(json.dumps(msg))
+					self.sendMessage(json.dumps(msg))
 			else:
 				self.sendMessage(self.factory.getAuthFailMessage(message['room']))
 				self.sendClose()
