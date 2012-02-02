@@ -110,18 +110,69 @@ function pickerCallback(hex, hsv, rgb, mousePicker, mouseSlide) {
 	updateToolsPreview();
 }
 
+function initBellsWhistles() {
+	if (!localStorage.ponyDrawSettings) {
+		var defaults = {
+			'showCheckers': false,
+			'showPointer': true
+		};
+		localStorage.ponyDrawSettings = JSON.stringify(defaults);
+	}
+
+	var settings = JSON.parse(localStorage.ponyDrawSettings);
+	form.showCheckers.checked = settings.showCheckers;
+	form.showPointer.checked = settings.showPointer;
+
+	if (settings.showCheckers) {
+		document.getElementById('checkers').style.display = 'block';
+	} else {
+		document.getElementById('checkers').style.display = 'none';
+	}
+
+	if (settings.showPointer) {
+		document.getElementById('touchOverlay').style.cursor = 'crosshair';
+	} else {
+		document.getElementById('touchOverlay').style.cursor = 'none';
+	}
+}
+
+function updateBellsWhistles(e) {
+	var settings = JSON.parse(localStorage.ponyDrawSettings);
+	switch (e.target.name) {
+		case 'showCheckers':
+			settings.showCheckers = form.showCheckers.checked;
+			if (settings.showCheckers) {
+				document.getElementById('checkers').style.display = 'block';
+			} else {
+				document.getElementById('checkers').style.display = 'none';
+			}
+		break;
+		case 'showPointer':
+			settings.showPointer = form.showPointer.checked;
+			if (settings.showPointer) {
+				document.getElementById('touchOverlay').style.cursor = 'crosshair';
+			} else {
+				document.getElementById('touchOverlay').style.cursor = 'none';
+			}
+		break;
+	}
+	localStorage.ponyDrawSettings = JSON.stringify(settings);
+}
+
 function initUI() {
 	form = document.forms.drawingSettings.elements;
 	document.forms.join.onsubmit = joinRoom;
 	document.forms.chatMsg.onsubmit = sendChatMessage;
 	document.forms.drawingSettings.addEventListener('input', updateToolsPreview);
 	document.forms.drawingSettings.addEventListener('change', showHideLayers);
+	document.forms.drawingSettings.addEventListener('change', updateBellsWhistles);
 	picker = ColorPicker(
 		document.getElementById('slide-wrapper'),
 		document.getElementById('picker-wrapper'),
 		pickerCallback
 	);
 	updateToolsPreview(true);
+	initBellsWhistles();
 
 	if (document.location.hash != '') {
 		document.forms.join.room.value = document.location.hash.slice(1);

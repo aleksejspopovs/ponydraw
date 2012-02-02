@@ -32,8 +32,8 @@ body {
 	z-index: -1;
 }
 
-.touchOverlay {
-	cursor: none;
+#touchOverlay {
+	cursor: crosshair;
 	z-index: 100000;
 	border-right: 1px solid;
 	border-bottom: 1px solid;
@@ -56,9 +56,10 @@ body {
 	width: 250px;
 }
 
-strong {
+h2 {
 	font-size: 14pt;
 	font-variant: small-caps;
+	margin: 2px 0px 2px 0px;
 }
 
 #cursor {

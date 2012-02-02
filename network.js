@@ -2,7 +2,7 @@ var wsPort = 9000;
 var ws;
 var connReady = false;
 var handlers = {};
-var roomOpts = {};
+var roomOpts;
 
 function messageHandler(e) {
 	var msg = JSON.parse(e.data);

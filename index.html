@@ -21,7 +21,7 @@
 	</head>
 	<body>
 		<div id='layerHolder'>
-			<div class='layer checkers'></div>
+			<div class='layer checkers' id='checkers'></div>
 			<span id='layers'>
 			</span>
 			<div class='layer touchOverlay' id='touchOverlay'></div>
@@ -42,14 +42,13 @@
 		</div>
 		<div id='toolHolder'>
 			<form name='drawingSettings'>
-				<strong>Tool:</strong><br />
+				<h2>Tool:</h2>
 				<label><input type='radio' name='tool' value='pencil' checked>Pencil</label>
 				<label><input type='radio' name='tool' value='eraser'>Eraser</label>
 				<label><input type='radio' name='tool' value='picker'>Color picker</label>
-				<br />
-				<strong>Options:</strong><br />
-				Line thickness: <input type='number' name='thickness' min='1' max='15' value='3'><br />
-				Color:<br />
+				<h2>Options:</h2>
+				Line thickness: <input type='range' name='thickness' min='1' max='40' value='3'><br />
+				Colour:<br />
 				<div class='cp-small'>
 					<div class='picker-wrapper' id='picker-wrapper'></div>
 					<div class='slide-wrapper' id='slide-wrapper'></div>
@@ -57,8 +56,11 @@
 				<input type='number' name='colorR' min='0' max='255' step='10' value='0'>
 				<input type='number' name='colorG' min='0' max='255' step='10' value='0'>
 				<input type='number' name='colorB' min='0' max='255' step='10' value='0'>
-				<canvas id='toolsPreview' width='250' height='40'></canvas><br />
-				<strong>Layers:</strong><br />
+				<canvas id='toolsPreview' width='250' height='40'></canvas>
+				<h2>Bells and whistles:</h2>
+				<label><input type='checkbox' name='showCheckers'> Show transparency checkers</label><br />
+				<label><input type='checkbox' name='showPointer'> Show system mouse pointer</label>
+				<h2>Layers:</h2>
 				<div id='layerList'>
 					none yet, lol
 				</div>

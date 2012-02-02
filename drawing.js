@@ -142,6 +142,10 @@ function sendLine(from, to, opts) {
 }
 
 function newLayer() {
+	if (!roomOpts) {
+		return;
+	}
+
 	var msg = {
 		type: 'newLayer'
 	};
