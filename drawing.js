@@ -25,6 +25,14 @@ function getTool() {
 	return '';
 }
 
+function setTool(tool) {
+	for (var i = 0; i < form.tool.length; i++) {
+		if (form.tool[i].value == tool) {
+			form.tool[i].checked = true;
+		}
+	}
+}
+
 function getDrawingSettings() {
 	var res = {};
 	res.strokeStyle = 'rgb(' + form.colorR.value + ',' + form.colorG.value + ',' + form.colorB.value + ')';
