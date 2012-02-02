@@ -7,17 +7,57 @@ from cgi import escape
 
 MAX_LAYERS_PER_USER = 5
 
+class Layer():
+	def __init__(self, owner, room, id, name, zIndex):
+		self.owner = owner
+		self.room = room
+		self.id = id
+		self.name = name
+		self.zIndex = zIndex
+		self.history = []
+
+	def belongsTo(self, someone):
+		return self.owner == someone
+
+	def canModerate(self, someone):
+		return self.owner == someone
+
+	def canDraw(self, someone):
+		return self.owner == someone
+
+	def addToHistory(self, msg):
+		self.history.append(msg)
+
+	def getDescription(self, someone):
+		return {
+			'id': self.id,
+			'name': self.name,
+			'zIndex': self.zIndex,
+			'canDraw': self.canDraw(someone),
+			'canModerate': self.canModerate(someone) or self.room.users[someone]['mod']
+		}
+
+class PublicLayer(Layer):
+	def belongsTo(self, someone):
+		return False
+
+	def canModerate(self, someone):
+		return False
+
+	def canDraw(self, someone):
+		return True
+
 class DrawingRoom():
 	def __init__(self, name, creator, w, h):
 		self.name = name
 		self.users = {}
 		self.layers = {}
-		self.layersW = 1
+		self.layersW = 2
 		self.width = w
 		self.height = h
-		self.history = []
 
 		self.addUser(creator, True)
+		self.layers[1] = PublicLayer('', self, 1, 'Public layer', 1)
 
 	def addUser(self, user, mod=False):
 		if (user[0] in self.users):
@@ -32,17 +72,12 @@ class DrawingRoom():
 	def addLayer(self, owner):
 		c = 0
 		for i in self.layers:
-			if (self.layers[i]['owner'] == owner):
+			if self.layers[i].belongsTo(owner):
 				c += 1
 				if (c >= MAX_LAYERS_PER_USER):
 					return False
 
-		self.layers[self.layersW] = {
-			'owner': owner,
-			'id': self.layersW,
-			'name': owner + ' ' + str(self.layersW),
-			'zIndex': self.layersW
-		}
+		self.layers[self.layersW] = Layer(owner, self, self.layersW, owner + ' ' + str(self.layersW), self.layersW)
 		self.layersW += 1
 		return self.layers[self.layersW - 1]
 
@@ -52,12 +87,9 @@ class DrawingRoom():
 		except KeyError:
 			return False
 
-		if self.users[user]['mod'] or self.layers[id]['owner'] == user:
+		if self.users[user]['mod'] or self.layers[id].canModerate(user):
 			rip = self.layers[id]
 			del self.layers[id]
-
-			self.history = reduce(lambda prev, cur: (json.loads(cur)['opts']['layer'] != id) and (prev + [cur]) or (prev), self.history, [])
-
 			return rip
 		else:
 			return False
@@ -69,16 +101,16 @@ class DrawingRoom():
 		except KeyError:
 			return False
 
-		if self.users[user]['mod'] or self.layers[aId]['owner'] == user or self.layers[bId]['owner'] == user:
+		if self.users[user]['mod'] or self.layers[aId].canModerate(user) or self.layers[bId].canModerate(user):
 			res = []
-			tmp = self.layers[aId]['zIndex']
-			self.layers[aId]['zIndex'] = self.layers[bId]['zIndex']
+			tmp = self.layers[aId].zIndex
+			self.layers[aId].zIndex = self.layers.zIndex
 			res.append({
 				'type': 'changeZIndex',
 				'id': aId,
 				'zIndex': self.layers[bId]['zIndex']
 			})
-			self.layers[bId]['zIndex'] = tmp
+			self.layers[bId].zIndex = tmp
 			res.append({
 				'type': 'changeZIndex',
 				'id': bId,
@@ -104,7 +136,9 @@ class DrawingRoom():
 		msg['width'] = self.width
 		msg['height'] = self.height
 		msg['users'] = [c for c in self.users if self.users[c]['online']]
-		msg['layers'] = self.layers
+		msg['layers'] = []
+		for i in self.layers:
+			msg['layers'].append(self.layers[i].getDescription(user))
 		return json.dumps(msg)
 
 	def isMod(self, user):
@@ -115,7 +149,7 @@ class DrawingRoom():
 
 	def canDrawOn(self, user, layer):
 		try:
-			return self.layers[layer]['owner'] == user
+			return self.layers[layer].canDraw(user)
 		except KeyError:
 			return false
 
@@ -134,8 +168,8 @@ class DrawingRoom():
 			msg['room'] = self.name
 		return json.dumps(msg)
 
-	def addToHistory(self, msg):
-		self.history.append(msg)
+	def addToHistory(self, msg, layer):
+		self.layers[layer].addToHistory(msg)
 
 
 class PonyDrawServerProtocol(WebSocketServerProtocol):
@@ -174,12 +208,13 @@ class PonyDrawServerProtocol(WebSocketServerProtocol):
 				self.room = self.factory.rooms[message['room']]
 				self.name = message['name']
 				self.factory.broadcast(self.room.setOnline(self.name, True), self.room.name, self)
-				self.sendMessage(self.room.getRoomInfo(self.name))
+				self.sendMessage(dict(self.room.getRoomInfo(self.name.items()) + {'name': self.name}))
 				msg = {}
 				msg['type'] = 'bunch'
 				msg['contents'] = []
-				for i in self.room.history:
-					msg['contents'].append(json.loads(i))
+				for i in self.room.layers:
+					for j in self.room.layers[i].history:
+						msg['contents'].append(json.loads(j))
 				self.sendMessage(json.dumps(msg))
 			else:
 				self.sendMessage(self.factory.getAuthFailMessage(message['room']))
@@ -189,21 +224,18 @@ class PonyDrawServerProtocol(WebSocketServerProtocol):
 				self.factory.broadcast(self.getChatMessage(message['msg']), self.room.name, None)
 		elif (message['type'] == 'line'):
 			if (self.room) and (self.room.canDrawOn(self.name, message['opts']['layer'])):
-				self.room.addToHistory(msg)
+				self.room.addToHistory(msg, message['opts']['layer'])
 				self.factory.broadcast(msg, self.room.name, self)
 		elif (message['type'] == 'newLayer'):
 			res = self.room.addLayer(self.name)
 			if (res):
-				res['type'] = 'newLayer'
-				self.factory.broadcast(json.dumps(res), self.room.name, None)
+				self.factory.broadcastDynamic(lambda user: json.dumps(dict(res.getDescription(user).items() + {'type': 'newLayer'}.items())), self.room.name, None)
 			else:
 				self.sendMessage(self.getNewLayerFailMessage())
 		elif (message['type'] == 'removeLayer'):
 			res = self.room.removeLayer(message['id'], self.name)
 			if (res):
-				res['who'] = self.name
-				res['type'] = 'removeLayer'
-				self.factory.broadcast(json.dumps(res), self.room.name, None)
+				self.factory.broadcastDynamic(lambda user: json.dumps(dict(res.getDescription(user).items() + {'type': 'removeLayer', 'who': self.name}.items())), self.room.name, None)
 		elif (message['type'] == 'swapLayers'):
 			res = self.room.swapLayers(message['aId'], message['bId'], self.name)
 			if (res):
@@ -243,6 +275,12 @@ class PonyDrawServerFactory(WebSocketServerFactory):
 		for c in self.clients:
 			if (c.room != None) and (c.room.name == room) and (c != exc):
 				c.sendMessage(msg)
+
+	def broadcastDynamic(self, msg, room, exc):
+		print "broadcasting dynamic message to members of room %s.." % (room)
+		for c in self.clients:
+			if (c.room != None) and (c.room.name == room) and (c != exc):
+				c.sendMessage(msg(c.name))
 
 	def canJoin(self, user, password, room):
 		if (room not in self.rooms):

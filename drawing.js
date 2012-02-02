@@ -182,9 +182,9 @@ function handleNewLayer(layer) {
 
 	var l = document.createElement('label');
 	l.id = 'label_' + layer.id;
-	l.innerHTML = '<input type=\'radio\' name=\'active\' ' + (layer.owner != roomOpts.user ? 'disabled' : '') + ' id=\'i' + layer.id + '\'>'
+	l.innerHTML = '<input type=\'radio\' name=\'active\' ' + (!layer.canDraw ? 'disabled' : '') + ' id=\'i' + layer.id + '\'>'
 		+ '<input type=\'checkbox\' name=\'show\' value=\'' + layer.id + '\' checked>' + layer.name
-		+ ((layer.owner == roomOpts.user || roomOpts.mod) ? ' <a href=\'javascript:void(0)\' onclick=\'removeLayer(' + layer.id + ');\'>×</a>'
+		+ (layer.canModerate ? ' <a href=\'javascript:void(0)\' onclick=\'removeLayer(' + layer.id + ');\'>×</a>'
 		+ ' <a href=\'javascript:void(0)\' onclick=\'layerShiftUp(' + layer.id + ')\'>↑</a>'
 		+ ' <a href=\'javascript:void(0)\' onclick=\'layerShiftDown(' + layer.id + ')\'>↓</a>' : '')
 		+ '<br />';

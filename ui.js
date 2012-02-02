@@ -159,9 +159,32 @@ function updateBellsWhistles(e) {
 	localStorage.ponyDrawSettings = JSON.stringify(settings);
 }
 
+function randomiseJoinData() {
+	var nameParts = [
+		['Wonderful', 'Mysterious', 'Awesome', 'Majestic', 'Fantastic', 'Fabulous', 'Spectacular', 'Extraordinary', 'Shy', 'Sweet'],
+		['Twilight', 'Pinkie', 'Nightmare', 'Sunshine', 'Royal', 'Young', 'Rainbow'],
+		['Pony', 'Filly', 'Mare', 'Stallion', 'Pegasus', 'Unicorn', 'Dragon', 'Mule']
+	];
+	var name = '';
+	for (var i = 0; i < nameParts.length; i++) {
+		name += nameParts[i][Math.round(Math.random() * (nameParts[i].length - 1))];
+	}
+
+	document.forms.join.name.value = name;
+
+	var pword = '';
+	for (var i = 0; i < 3; i++) {
+		pword += String.fromCharCode(97 + Math.round(Math.random() * 25));
+	}
+
+	document.forms.join.password.value = pword;
+	serviceMessage('Your randomly generated password is ' + pword + '.');
+}
+
 function initUI() {
 	form = document.forms.drawingSettings.elements;
 	document.forms.join.onsubmit = joinRoom;
+	document.forms.join.randomise.onclick = randomiseJoinData;
 	document.forms.chatMsg.onsubmit = sendChatMessage;
 	document.forms.drawingSettings.addEventListener('input', updateToolsPreview);
 	document.forms.drawingSettings.addEventListener('change', showHideLayers);
