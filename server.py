@@ -104,11 +104,11 @@ class DrawingRoom():
 		if self.users[user]['mod'] or self.layers[aId].canModerate(user) or self.layers[bId].canModerate(user):
 			res = []
 			tmp = self.layers[aId].zIndex
-			self.layers[aId].zIndex = self.layers.zIndex
+			self.layers[aId].zIndex = self.layers[bId].zIndex
 			res.append({
 				'type': 'changeZIndex',
 				'id': aId,
-				'zIndex': self.layers[bId]['zIndex']
+				'zIndex': self.layers[bId].zIndex
 			})
 			self.layers[bId].zIndex = tmp
 			res.append({
@@ -139,7 +139,7 @@ class DrawingRoom():
 		msg['layers'] = []
 		for i in self.layers:
 			msg['layers'].append(self.layers[i].getDescription(user))
-		return json.dumps(msg)
+		return msg
 
 	def isMod(self, user):
 		try:
@@ -208,12 +208,12 @@ class PonyDrawServerProtocol(WebSocketServerProtocol):
 				self.room = self.factory.rooms[message['room']]
 				self.name = message['name']
 				self.factory.broadcast(self.room.setOnline(self.name, True), self.room.name, self)
-				self.sendMessage(dict(self.room.getRoomInfo(self.name.items()) + {'name': self.name}))
-				for j in self.room.layers[i].history:
+				self.sendMessage(json.dumps(dict(self.room.getRoomInfo(self.name).items() + {'name': self.name}.items())))
+				for i in self.room.layers:
 					msg = {}
 					msg['type'] = 'bunch'
 					msg['contents'] = []
-					for i in self.room.layers:
+					for j in self.room.layers[i].history:
 						msg['contents'].append(json.loads(j))
 					self.sendMessage(json.dumps(msg))
 			else:
