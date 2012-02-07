@@ -43,14 +43,18 @@ function makeInstrumentUpHandler(code) {
 }
 
 function permanentToolChooser(event) {
+	console.log(event.keyCode);
 	switch (event.keyCode) {
-		case 112:
+		case 112: // p
+		case 1079:
 			setTool('pencil');
 		break;
-		case 99:
+		case 99: // c
+		case 1089:
 			setTool('picker');
 		break;
-		case 101:
+		case 101: // e
+		case 1091:
 			setTool('eraser');
 		break;
 	}
