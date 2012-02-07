@@ -42,7 +42,22 @@ function makeInstrumentUpHandler(code) {
 	}
 }
 
+function permanentToolChooser(event) {
+	switch (event.keyCode) {
+		case 112:
+			setTool('pencil');
+		break;
+		case 99:
+			setTool('picker');
+		break;
+		case 101:
+			setTool('eraser');
+		break;
+	}
+}
+
 function initKeyboard() {
 	document.addEventListener('keypress', thicknessHandler);
 	document.addEventListener('keydown', instrumentDownHandler);
+	document.addEventListener('keypress', permanentToolChooser);
 }

@@ -97,7 +97,8 @@ function pickerHandler(e) {
 	tmpC.width = 1;
 	tmpC.height = 1;
 	var ctx = tmpC.getContext('2d');
-	ctx.clearRect(0, 0, 1, 1);
+	ctx.fillStyle = 'rgba(255, 255, 255, 100)';
+	ctx.fillRect(0, 0, 1, 1);
 	for (var i = layers.length - 1; i >= 0; i--) {
 		var cur = document.getElementById('layer_' + layers[i].id);
 		if (cur.style.display != 'none') {
