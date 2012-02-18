@@ -1,9 +1,9 @@
-function thicknessHandler(e) {
-	if (e.target.nodeName.toLowerCase() != 'body') {
+function thicknessHandler(event) {
+	if (event.target.nodeName.toLowerCase() != 'body') {
 		return;
 	}
 
-	switch (e.keyCode) {
+	switch (event.keyCode) {
 		case 91: // [
 		case 1093: // russian [
 			form.thickness.value = parseInt(form.thickness.value) - 1;
@@ -16,33 +16,37 @@ function thicknessHandler(e) {
 	updateToolsPreview();
 }
 
-function instrumentDownHandler(e) {
-	if ((e.target.nodeName.toLowerCase() != 'body') || (getTool() != 'pencil')) {
+function instrumentDownHandler(event) {
+	if ((event.target.nodeName.toLowerCase() != 'body') || (getTool() != 'pencil')) {
 		return;
 	}
 
-	if (e.keyCode == 16) { // shift
+	if (event.keyCode == 16) { // shift
 		setTool('picker');
-		document.addEventListener('keyup', makeInstrumentUpHandler(e.keyCode));
-	} else if (e.keyCode == 17) { // ctrl
+		document.addEventListener('keyup', makeInstrumentUpHandler(event.keyCode));
+	} else if (event.keyCode == 17) { // ctrl
 		setTool('eraser');
-		document.addEventListener('keyup', makeInstrumentUpHandler(e.keyCode));
+		document.addEventListener('keyup', makeInstrumentUpHandler(event.keyCode));
 	}
 }
 
 function makeInstrumentUpHandler(code) {
-	return function (e) {
-		if (e.target.nodeName.toLowerCase() != 'body') {
+	return function (event) {
+		if (event.target.nodeName.toLowerCase() != 'body') {
 			return;
 		}
-		if (e.keyCode == code) {
+		if (event.keyCode == code) {
 			setTool('pencil');
-			document.removeEventListener('keyup', makeInstrumentUpHandler(e.keyCode));
+			document.removeEventListener('keyup', makeInstrumentUpHandler(event.keyCode));
 		}
 	}
 }
 
 function simpleHotkeys(event) {
+	if (event.target.nodeName.toLowerCase() != 'body') {
+			return;
+	}
+
 	switch (event.keyCode) {
 		// permanent tool choices
 		case 112: // p
