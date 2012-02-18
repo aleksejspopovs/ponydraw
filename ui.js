@@ -181,6 +181,27 @@ function randomiseJoinData() {
 	serviceMessage('Your randomly generated password is ' + pword + '.');
 }
 
+function toggleChatVisibility() {
+	var chat = document.getElementById('chatHolder');
+	var tools = document.getElementById('toolHolder');
+	if (chat.style.display != 'none') {
+		chat.style.display = 'none';
+	} else {
+		chat.style.display = 'block';
+	}
+}
+
+function toggleToolsVisibility() {
+	var chat = document.getElementById('chatHolder');
+	var tools = document.getElementById('toolHolder');
+	if (tools.style.display != 'none') {
+		tools.style.display = 'none';
+	} else {
+		tools.style.display = 'block';
+	}
+	chat.style.right = Math.max(tools.getElementWidth() - 1, 0) + 'px';
+}
+
 function initUI() {
 	form = document.forms.drawingSettings.elements;
 	document.forms.join.onsubmit = joinRoom;

@@ -42,9 +42,9 @@ function makeInstrumentUpHandler(code) {
 	}
 }
 
-function permanentToolChooser(event) {
-	console.log(event.keyCode);
+function simpleHotkeys(event) {
 	switch (event.keyCode) {
+		// permanent tool choices
 		case 112: // p
 		case 1079:
 			setTool('pencil');
@@ -57,11 +57,20 @@ function permanentToolChooser(event) {
 		case 1091:
 			setTool('eraser');
 		break;
+		// UI
+		case 113: // q - hide/show chat
+		case 1081:
+			toggleChatVisibility();
+		break;
+		case 119: // w - hide/show tools
+		case 1094:
+			toggleToolsVisibility();
+		break;
 	}
 }
 
 function initKeyboard() {
 	document.addEventListener('keypress', thicknessHandler);
 	document.addEventListener('keydown', instrumentDownHandler);
-	document.addEventListener('keypress', permanentToolChooser);
+	document.addEventListener('keypress', simpleHotkeys);
 }
