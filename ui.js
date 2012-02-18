@@ -60,7 +60,7 @@ function showHideLayers() {
 }
 
 function updateCanvasSize() {
-	var availWidth = window.innerWidth - document.getElementById('toolHolder').getElementWidth();
+	var availWidth = document.body.getElementWidth() - document.getElementById('toolHolder').getElementWidth();
 	var availHeight = window.innerHeight - document.getElementById('chatHolder').getElementHeight();
 	canvasRatio = Math.min(availWidth / roomOpts.width, availHeight / roomOpts.height);
 	if (canvasRatio > 1) {
@@ -183,12 +183,12 @@ function randomiseJoinData() {
 
 function toggleChatVisibility() {
 	var chat = document.getElementById('chatHolder');
-	var tools = document.getElementById('toolHolder');
 	if (chat.style.display != 'none') {
 		chat.style.display = 'none';
 	} else {
 		chat.style.display = 'block';
 	}
+	updateCanvasSize();
 }
 
 function toggleToolsVisibility() {
@@ -200,6 +200,7 @@ function toggleToolsVisibility() {
 		tools.style.display = 'block';
 	}
 	chat.style.right = Math.max(tools.getElementWidth() - 1, 0) + 'px';
+	updateCanvasSize();
 }
 
 function initUI() {
