@@ -196,6 +196,7 @@
 				width = pickerElement.offsetWidth,
 				height = pickerElement.offsetHeight;
 
+			evt.preventDefault();
 			ctx.s = mouse.x / width;
 			ctx.v = (height - mouse.y) / height;
 			var c = hsv2rgb(ctx.h, ctx.s, ctx.v);
