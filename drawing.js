@@ -116,7 +116,6 @@ function pickerHandler(e) {
 }
 
 function drawLine(from, to, opts) {
-	console.log(from.x, from.y, to.x, to.y);
 	var ctx = document.getElementById('layer_' + opts.layer).getContext('2d');
 	if (opts.erase) {
 		ctx.globalCompositeOperation = 'destination-out';
