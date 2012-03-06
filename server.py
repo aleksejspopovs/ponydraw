@@ -5,172 +5,9 @@ from autobahn.websocket import WebSocketServerFactory, WebSocketServerProtocol, 
 from hashlib import sha256
 from cgi import escape
 
-MAX_LAYERS_PER_USER = 5
+from entities.room import DrawingRoom
 
-class Layer():
-	def __init__(self, owner, room, id, name, zIndex):
-		self.owner = owner
-		self.room = room
-		self.id = id
-		self.name = name
-		self.zIndex = zIndex
-		self.history = []
-
-	def belongsTo(self, someone):
-		return self.owner == someone
-
-	def canModerate(self, someone):
-		return self.owner == someone
-
-	def canDraw(self, someone):
-		return self.owner == someone
-
-	def addToHistory(self, msg):
-		self.history.append(msg)
-
-	def getDescription(self, someone):
-		return {
-			'id': self.id,
-			'name': self.name,
-			'zIndex': self.zIndex,
-			'canDraw': self.canDraw(someone),
-			'canModerate': self.canModerate(someone) or self.room.users[someone]['mod']
-		}
-
-class PublicLayer(Layer):
-	def belongsTo(self, someone):
-		return False
-
-	def canModerate(self, someone):
-		return False
-
-	def canDraw(self, someone):
-		return True
-
-class DrawingRoom():
-	def __init__(self, name, creator, w, h):
-		self.name = name
-		self.users = {}
-		self.layers = {}
-		self.layersW = 2
-		self.width = w
-		self.height = h
-
-		self.addUser(creator, True)
-		self.layers[1] = PublicLayer('', self, 1, 'Public layer', 1)
-
-	def addUser(self, user, mod=False):
-		if (user[0] in self.users):
-			return
-
-		self.users[user[0]] = {
-			'password': user[1],
-			'mod': mod,
-			'online': False
-		}
-
-	def addLayer(self, owner):
-		c = 0
-		for i in self.layers:
-			if self.layers[i].belongsTo(owner):
-				c += 1
-				if (c >= MAX_LAYERS_PER_USER):
-					return False
-
-		self.layers[self.layersW] = Layer(owner, self, self.layersW, owner + ' ' + str(self.layersW), self.layersW)
-		self.layersW += 1
-		return self.layers[self.layersW - 1]
-
-	def removeLayer(self, id, user):
-		try:
-			self.layers[id]
-		except KeyError:
-			return False
-
-		if self.users[user]['mod'] or self.layers[id].canModerate(user):
-			rip = self.layers[id]
-			del self.layers[id]
-			return rip
-		else:
-			return False
-
-	def swapLayers(self, aId, bId, user):
-		try:
-			self.layers[aId]
-			self.layers[bId]
-		except KeyError:
-			return False
-
-		if self.users[user]['mod'] or self.layers[aId].canModerate(user) or self.layers[bId].canModerate(user):
-			res = []
-			tmp = self.layers[aId].zIndex
-			self.layers[aId].zIndex = self.layers[bId].zIndex
-			res.append({
-				'type': 'changeZIndex',
-				'id': aId,
-				'zIndex': self.layers[bId].zIndex
-			})
-			self.layers[bId].zIndex = tmp
-			res.append({
-				'type': 'changeZIndex',
-				'id': bId,
-				'zIndex': tmp
-			})
-			return res
-		else:
-			return False
-
-
-	def getUser(self, which):
-		if (which not in self.users):
-			return None
-		else:
-			return self.users[which]
-
-	def getRoomInfo(self, user):
-		msg = {}
-		msg['type'] = 'joinSuccess'
-		msg['room'] = self.name
-		msg['mod'] = self.users[user]['mod']
-		msg['user'] = user
-		msg['width'] = self.width
-		msg['height'] = self.height
-		msg['users'] = [c for c in self.users if self.users[c]['online']]
-		msg['layers'] = []
-		for i in self.layers:
-			msg['layers'].append(self.layers[i].getDescription(user))
-		return msg
-
-	def isMod(self, user):
-		try:
-			return self.getUser(user)['mod']
-		except AttributeError:
-			return False
-
-	def canDrawOn(self, user, layer):
-		try:
-			return self.layers[layer].canDraw(user)
-		except KeyError:
-			return false
-
-	def setOnline(self, user, state):
-		msg = {}
-		if (state):
-			self.users[user]['online'] = True
-			msg['type'] = 'userJoined'
-			msg['name'] = user
-			msg['room'] = self.name
-			msg['mod'] = self.users[user]['mod']
-		else:
-			self.users[user]['online'] = False
-			msg['type'] = 'userLeft'
-			msg['name'] = user
-			msg['room'] = self.name
-		return json.dumps(msg)
-
-	def addToHistory(self, msg, layer):
-		self.layers[layer].addToHistory(msg)
-
+from storage.FileStorage import FileStorage
 
 class PonyDrawServerProtocol(WebSocketServerProtocol):
 	def __init__(self):
@@ -228,37 +65,44 @@ class PonyDrawServerProtocol(WebSocketServerProtocol):
 				self.factory.broadcast(msg, self.room.name, self)
 		elif (message['type'] == 'newLayer'):
 			res = self.room.addLayer(self.name)
-			if (res):
+			if res:
 				self.factory.broadcastDynamic(lambda user: json.dumps(dict(res.getDescription(user).items() + {'type': 'newLayer'}.items())), self.room.name, None)
 			else:
 				self.sendMessage(self.getNewLayerFailMessage())
 		elif (message['type'] == 'removeLayer'):
 			res = self.room.removeLayer(message['id'], self.name)
-			if (res):
+			if res:
 				self.factory.broadcastDynamic(lambda user: json.dumps(dict(res.getDescription(user).items() + {'type': 'removeLayer', 'who': self.name}.items())), self.room.name, None)
 		elif (message['type'] == 'swapLayers'):
 			res = self.room.swapLayers(message['aId'], message['bId'], self.name)
-			if (res):
+			if res:
 				for i in res:
 					self.factory.broadcast(json.dumps(i), self.room.name, None)
 				self.factory.broadcast(msg, self.room.name, None)
 
-
-
 	def connectionLost(self, reason):
 		WebSocketServerProtocol.connectionLost(self, reason)
-		if (self.room):
+		if self.room:
 			self.factory.broadcast(self.room.setOnline(self.name, False), self.room.name, self)
+			if self.room.empty():
+				self.factory.roomEmpty(self.room.name)
 		self.factory.unregister(self)
 
 
 class PonyDrawServerFactory(WebSocketServerFactory):
 	protocol = PonyDrawServerProtocol
 
-	def __init__(self, url):
+	def __init__(self, url, storagePath):
 		WebSocketServerFactory.__init__(self, url)
 		self.clients = []
 		self.rooms = {}
+		self.storage = FileStorage()
+		self.storage.open(storagePath)
+
+	def stopFactory(self):
+		for room in self.rooms:
+			self.storage.saveRoom(self.rooms[room])
+		self.storage.close()
 
 	def register(self, client):
 		if not client in self.clients:
@@ -283,12 +127,19 @@ class PonyDrawServerFactory(WebSocketServerFactory):
 				c.sendMessage(msg(c.name))
 
 	def canJoin(self, user, password, room):
-		if (room not in self.rooms):
-			self.rooms[room] = DrawingRoom(room, (user, password), 1024, 768)
-		if (not self.rooms[room].getUser(user)):
+		if room not in self.rooms:
+			if self.storage.roomInStorage(room):
+				self.rooms[room] = self.storage.getRoom(room)
+			else:
+				self.rooms[room] = DrawingRoom(room, (user, password), 1024, 768)
+		if not self.rooms[room].getUser(user):
 			self.rooms[room].addUser((user, password))
 
 		return self.rooms[room].getUser(user)['password'] == password
+
+	def roomEmpty(self, room):
+		self.storage.saveRoom(self.rooms[room])
+		del self.rooms[room]
 
 	def getAuthFailMessage(self, room):
 		msg = {}
@@ -300,6 +151,6 @@ class PonyDrawServerFactory(WebSocketServerFactory):
 
 if __name__ == '__main__':
 	log.startLogging(sys.stdout)
-	factory = PonyDrawServerFactory("ws://127.0.0.1:9000")
+	factory = PonyDrawServerFactory('ws://127.0.0.1:9000', 'c:\\ponydrawstorage')
 	listenWS(factory)
 	reactor.run()

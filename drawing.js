@@ -103,7 +103,7 @@ function pickerHandler(e) {
 		var cur = document.getElementById('layer_' + layers[i].id);
 		if (cur.style.display != 'none') {
 			var curData = cur.getContext('2d').getImageData(point.x, point.y, 1, 1);
-			// we can't just put the curData onto tmpC, becasue putImageData ignores blending
+			// we can't just put curData onto tmpC, becasue putImageData ignores blending
 			ctx.fillStyle = 'rgba('+ curData.data[0] + ',' + curData.data[1] + ',' + curData.data[2] + ',' + (curData.data[3] / 100) +')';
 			ctx.fillRect(0, 0, 1, 1);
 		}
@@ -116,22 +116,31 @@ function pickerHandler(e) {
 }
 
 function drawLine(from, to, opts) {
+	console.log(from.x, from.y, to.x, to.y);
 	var ctx = document.getElementById('layer_' + opts.layer).getContext('2d');
-	ctx.beginPath();
 	if (opts.erase) {
 		ctx.globalCompositeOperation = 'destination-out';
-		ctx.strokeStyle = 'rgba(0, 0, 0, 1)';
+		var style = 'rgba(0, 0, 0, 1)';
 	} else {
 		ctx.globalCompositeOperation = 'source-over';
-		ctx.strokeStyle = opts.strokeStyle;
+		var style = opts.strokeStyle;
 	}
 
-	ctx.lineCap = "round";
-	ctx.lineWidth = opts.lineWidth;
-	ctx.moveTo(from.x, from.y);
-	ctx.lineTo(to.x, to.y);
-	ctx.stroke();
-	ctx.closePath();
+	ctx.beginPath();
+	if ((from.x == to.x) && (from.y == to.y)) {
+		ctx.fillStyle = style;
+		ctx.arc(to.x, to.y, opts.lineWidth / 2, 0, Math.PI*2, true);
+		ctx.closePath();
+		ctx.fill();
+	} else {
+		ctx.strokeStyle = style;
+		ctx.lineWidth = opts.lineWidth;
+		ctx.lineCap = "round";
+		ctx.moveTo(from.x, from.y);
+		ctx.lineTo(to.x, to.y);
+		ctx.stroke();
+		ctx.closePath();
+	}
 }
 
 function handleLine(msg) {
