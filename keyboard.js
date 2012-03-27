@@ -24,7 +24,8 @@ function instrumentDownHandler(event) {
 	if (event.keyCode == 16) { // shift
 		setTool('picker');
 		document.addEventListener('keyup', makeInstrumentUpHandler(event.keyCode));
-	} else if (event.keyCode == 17) { // ctrl
+	} else if (((navigator.platform.slice(0, 3) != 'Mac') && (event.keyCode == 17)) ||
+		((navigator.platform.slice(0, 3) == 'Mac') && (event.keyCode == 91))) { // cmd on mac, ctrl on all the other platforms
 		setTool('eraser');
 		document.addEventListener('keyup', makeInstrumentUpHandler(event.keyCode));
 	}
