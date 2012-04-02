@@ -1,7 +1,7 @@
-import json
+import json, sys
+sys.path.append('../')
+import config
 from entities.layer import *
-
-MAX_LAYERS_PER_USER = 5
 
 class DrawingRoom():
 	def __init__(self, name, creator, w, h):
@@ -30,7 +30,7 @@ class DrawingRoom():
 		for i in self.layers:
 			if self.layers[i].belongsTo(owner):
 				c += 1
-				if (c >= MAX_LAYERS_PER_USER):
+				if (c >= config.maxLayersPerUser):
 					return False
 
 		self.layers[self.layersW] = Layer(owner, self, self.layersW, owner + ' ' + str(self.layersW), self.layersW)

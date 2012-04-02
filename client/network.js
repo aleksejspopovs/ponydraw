@@ -90,12 +90,14 @@ handlers['joinFailure'] = handleJoinFailure;
 
 function handleUserJoined(msg) {
 	serviceMessage(msg.name + ' joined #' + msg.room + (msg.mod ? ' as a moderator' : ''));
+	roomOpts.users.push(msg.name);
 }
 
 handlers['userJoined'] = handleUserJoined;
 
 function handleUserLeft(msg) {
 	serviceMessage(msg.name + ' left #' + msg.room);
+	roomOpts.users.splice(roomOpts.users.indexOf(msg.name));
 }
 
 handlers['userLeft'] = handleUserLeft;

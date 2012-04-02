@@ -52,7 +52,7 @@ body {
 	border-left: 1px solid;
 	position: absolute;
 	right: 0px;
-	height: 100%;
+	min-height: 100%;
 	width: 250px;
 }
 

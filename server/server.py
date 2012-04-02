@@ -1,4 +1,5 @@
 import sys, json
+import config
 from twisted.internet import reactor
 from twisted.python import log
 from autobahn.websocket import WebSocketServerFactory, WebSocketServerProtocol, listenWS
@@ -92,12 +93,12 @@ class PonyDrawServerProtocol(WebSocketServerProtocol):
 class PonyDrawServerFactory(WebSocketServerFactory):
 	protocol = PonyDrawServerProtocol
 
-	def __init__(self, url, storagePath):
+	def __init__(self, url, storage, storageArgs):
 		WebSocketServerFactory.__init__(self, url)
 		self.clients = []
 		self.rooms = {}
-		self.storage = FileStorage()
-		self.storage.open(storagePath)
+		self.storage = storage()
+		self.storage.open(*storageArgs)
 
 	def stopFactory(self):
 		for room in self.rooms:
@@ -140,7 +141,8 @@ class PonyDrawServerFactory(WebSocketServerFactory):
 		return self.rooms[room].getUser(user)['password'] == password
 
 	def roomEmpty(self, room):
-		self.storage.saveRoom(self.rooms[room])
+		if (self.storage.isOpen):
+			self.storage.saveRoom(self.rooms[room])
 		del self.rooms[room]
 
 	def getAuthFailMessage(self, room):
@@ -153,6 +155,6 @@ class PonyDrawServerFactory(WebSocketServerFactory):
 
 if __name__ == '__main__':
 	log.startLogging(sys.stdout)
-	factory = PonyDrawServerFactory('ws://127.0.0.1:9000', 'c:\\ponydrawstorage')
+	factory = PonyDrawServerFactory(config.wsListenIP, config.storage, config.storageArgs)
 	listenWS(factory)
 	reactor.run()

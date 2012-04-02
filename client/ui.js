@@ -188,7 +188,9 @@ function toggleChatVisibility() {
 	} else {
 		chat.style.display = 'block';
 	}
-	updateCanvasSize();
+	if (roomOpts) {
+		updateCanvasSize();
+	}
 }
 
 function toggleToolsVisibility() {
@@ -200,7 +202,9 @@ function toggleToolsVisibility() {
 		tools.style.display = 'block';
 	}
 	chat.style.right = Math.max(tools.getElementWidth() - 1, 0) + 'px';
-	updateCanvasSize();
+	if (roomOpts) {
+		updateCanvasSize();
+	}
 }
 
 function saveLocal() {
