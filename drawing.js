@@ -78,7 +78,7 @@ function mouseUp(e) {
 
 function drawHandler(e) {
 	e.preventDefault();
-	point = getCoords(e)
+	point = getCoords(e);
 	var opts = getDrawingSettings();
 
 	if (opts.layer === undefined) {

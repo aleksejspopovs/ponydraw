@@ -45,11 +45,11 @@
 		</div>
 		<div id='toolHolder'>
 			<form name='drawingSettings'>
-				<h2>Tool:</h2>
+				<h2>Tool</h2>
 				<label><input type='radio' name='tool' value='pencil' checked>Pencil</label>
 				<label><input type='radio' name='tool' value='eraser'>Eraser</label>
 				<label><input type='radio' name='tool' value='picker'>Color picker</label>
-				<h2>Options:</h2>
+				<h2>Options</h2>
 				Line thickness: <input type='range' name='thickness' min='1' max='40' value='3'><br />
 				Colour:<br />
 				<div class='cp-small'>
@@ -60,10 +60,12 @@
 				<input type='number' name='colorG' min='0' max='255' step='10' value='0'>
 				<input type='number' name='colorB' min='0' max='255' step='10' value='0'>
 				<canvas id='toolsPreview' width='250' height='40'></canvas>
-				<h2>Bells and whistles:</h2>
+				<h2>Actions</h2>
+				<a href='javascript:void(0)' onclick='saveLocal();'>Save current canvas locally</a>
+				<h2>Bells and whistles</h2>
 				<label><input type='checkbox' name='showCheckers'> Show transparency checkers</label><br />
 				<label><input type='checkbox' name='showPointer'> Show system mouse pointer</label>
-				<h2>Layers:</h2>
+				<h2>Layers</h2>
 				<div id='layerList'>
 					none yet, lol
 				</div>

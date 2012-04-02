@@ -203,6 +203,31 @@ function toggleToolsVisibility() {
 	updateCanvasSize();
 }
 
+function saveLocal() {
+	if (!roomOpts) {
+		return;
+	}
+
+	var tmpC = document.createElement('canvas');
+	tmpC.width = roomOpts.width;
+	tmpC.height = roomOpts.height;
+	var ctx = tmpC.getContext('2d');
+	if (document.getElementById('checkers').style.display == 'none') {
+		ctx.fillStyle = '#FFFFFF';
+		ctx.fillRect(tmpC.width, tmpC.height);
+	}
+
+	var images = [];
+	for (var i = layers.length - 1; i >= 0; i--) {
+		var cur = document.getElementById('layer_' + layers[i].id);
+		if (cur.style.display != 'none') {
+			ctx.drawImage(cur, 0, 0);
+		}
+	}
+
+	window.open(ctx.canvas.toDataURL('image/png'));
+}
+
 function initUI() {
 	form = document.forms.drawingSettings.elements;
 	document.forms.join.onsubmit = joinRoom;
