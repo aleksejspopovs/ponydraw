@@ -102,9 +102,9 @@ class PonyDrawServerFactory(WebSocketServerFactory):
 	def stopFactory(self):
 		for room in self.rooms:
 			self.storage.saveRoom(self.rooms[room])
-		self.storage.close()
 		for client in self.clients:
 			self.clients.remove(client)
+		self.storage.close()
 
 	def register(self, client):
 		if not client in self.clients:
