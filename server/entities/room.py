@@ -97,6 +97,9 @@ class DrawingRoom():
 			msg['layers'].append(self.layers[i].getDescription(user))
 		return msg
 
+	def changePassword(self, user, new):
+		self.users[user]['password'] = new
+
 	def isMod(self, user):
 		try:
 			return self.getUser(user)['mod']

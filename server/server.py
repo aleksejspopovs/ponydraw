@@ -31,11 +31,11 @@ class PonyDrawServerProtocol(WebSocketServerProtocol):
 	def onOpen(self):
 		self.factory.register(self)
 
-	def onMessage(self, msg, binary):
+	def onMessage(self, raw, binary):
 		if binary:
 			return
 
-		message = json.loads(msg)
+		message = json.loads(raw)
 		for i in message:
 			if isinstance(message[i], basestring):
 				message[i] = escape(message[i])
@@ -60,12 +60,29 @@ class PonyDrawServerProtocol(WebSocketServerProtocol):
 				self.sendMessage(self.factory.getAuthFailMessage(message['room']))
 				self.sendClose()
 		elif (message['type'] == 'chat'):
-			if (self.room):
+			if (not self.room):
+				return
+
+			if message['msg'].startswith('/'):
+				command = message['msg'][1:].split()[0]
+				options = (len(message['msg'][1:].split()) > 1 and message['msg'][1:].split()[1]) or ''
+				if (command == 'me'):
+					msg = {}
+					msg['type'] = 'announcement'
+					msg['msg'] = '* ' + self.name + ' ' + options
+					self.factory.broadcast(json.dumps(msg), self.room.name, None)
+				elif (command == 'passwd'):
+					self.room.changePassword(self.name, sha256(options).hexdigest())
+					msg = {}
+					msg['type'] = 'announcement'
+					msg['msg'] = 'Your password was successfully changed.'
+					self.sendMessage(json.dumps(msg))
+			else:
 				self.factory.broadcast(self.getChatMessage(message['msg']), self.room.name, None)
 		elif (message['type'] == 'line'):
 			if (self.room) and (self.room.canDrawOn(self.name, message['opts']['layer'])):
-				self.room.addToHistory(msg, message['opts']['layer'])
-				self.factory.broadcast(msg, self.room.name, self)
+				self.room.addToHistory(raw, message['opts']['layer'])
+				self.factory.broadcast(raw, self.room.name, self)
 		elif (message['type'] == 'newLayer'):
 			res = self.room.addLayer(self.name)
 			if res:
@@ -81,7 +98,7 @@ class PonyDrawServerProtocol(WebSocketServerProtocol):
 			if res:
 				for i in res:
 					self.factory.broadcast(json.dumps(i), self.room.name, None)
-				self.factory.broadcast(msg, self.room.name, None)
+				self.factory.broadcast(raw, self.room.name, None)
 
 	def connectionLost(self, reason):
 		WebSocketServerProtocol.connectionLost(self, reason)

@@ -1,4 +1,5 @@
 function serviceMessage(msg) {
+	msg = msg.replace(/\n/gi, '<br>');
 	document.getElementById('chat').innerHTML += '<span class=\'serviceMsg\'>' + msg + '</span><br>';
 	document.getElementById('chat').scrollTop = document.getElementById('chat').scrollHeight;
 }
