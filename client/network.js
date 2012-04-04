@@ -24,6 +24,8 @@ function messageHandler(e) {
 function initWebSocket() {
 	var wsURI = 'ws://' + (document.location.protocol == 'file:' ? 'localhost' : document.location.hostname) + ':' + wsPort;
 
+	serviceMessage('Please wait while I try to establish a connection to the server.');
+
 	if ('WebSocket' in window) {
 		ws = new WebSocket(wsURI);
 	}	else if ('MozWebSocket' in window) {

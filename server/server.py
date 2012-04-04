@@ -36,10 +36,12 @@ class PonyDrawServerProtocol(WebSocketServerProtocol):
 			return
 
 		message = json.loads(msg)
-		print message
 		for i in message:
 			if isinstance(message[i], basestring):
 				message[i] = escape(message[i])
+
+		if (message['type'] != 'line'):
+			print message
 
 		if (message['type'] == 'register'):
 			if self.factory.canJoin(message['name'], sha256(message['password']).hexdigest(), message['room']):
@@ -118,13 +120,11 @@ class PonyDrawServerFactory(WebSocketServerFactory):
 			self.clients.remove(client)
 
 	def broadcast(self, msg, room, exc):
-		print "broadcasting message '%s' to members of room %s.." % (msg, room)
 		for c in self.clients:
 			if (c.room != None) and (c.room.name == room) and (c != exc):
 				c.sendMessage(msg)
 
 	def broadcastDynamic(self, msg, room, exc):
-		print "broadcasting dynamic message to members of room %s.." % (room)
 		for c in self.clients:
 			if (c.room != None) and (c.room.name == room) and (c != exc):
 				c.sendMessage(msg(c.name))
@@ -154,7 +154,7 @@ class PonyDrawServerFactory(WebSocketServerFactory):
 
 
 if __name__ == '__main__':
-	log.startLogging(sys.stdout)
+	log.startLogging(config.logFile)
 	factory = PonyDrawServerFactory(config.wsListenIP, config.storage, config.storageArgs)
 	listenWS(factory)
 	reactor.run()
