@@ -1,3 +1,8 @@
+/*
+© 2012 Aleksejs Popovs <me@popoffka.ru>
+Licensed under MIT License. See ../LICENSE for more info.
+*/
+
 var wsPort = 9000;
 var ws;
 var connReady = false;

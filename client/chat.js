@@ -1,3 +1,8 @@
+/*
+© 2012 Aleksejs Popovs <me@popoffka.ru>
+Licensed under MIT License. See ../LICENSE for more info.
+*/
+
 function serviceMessage(msg) {
 	msg = msg.replace(/\n/gi, '<br>');
 	document.getElementById('chat').innerHTML += '<span class=\'serviceMsg\'>' + msg + '</span><br>';

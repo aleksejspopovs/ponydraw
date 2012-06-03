@@ -1,3 +1,8 @@
+/*
+© 2012 Aleksejs Popovs <me@popoffka.ru>
+Licensed under MIT License. See ../LICENSE for more info.
+*/
+
 var canvasRatio = 1.0;
 var picker;
 var form;
@@ -32,7 +37,7 @@ function updateToolsPreview(e) {
 	form.colorG.value = (parseInt(form.colorG.value) ? form.colorG.value : 0);
 	form.colorB.value = (parseInt(form.colorB.value) ? form.colorB.value : 0);
 	if (e) {
-		picker.setRgb({r: form.colorR.value, g: form.colorG.value, b: form.colorB.value});
+		pickerSetColor(form.colorR.value, form.colorG.value, form.colorB.value);
 	}
 
 	ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
@@ -103,10 +108,10 @@ function moveCursor(e) {
 	cursor.style.left = x + 'px';
 }
 
-function pickerCallback(hex, hsv, rgb, mousePicker, mouseSlide) {
-	form.colorR.value = Math.round(rgb.r);
-	form.colorG.value = Math.round(rgb.g);
-	form.colorB.value = Math.round(rgb.b);
+function pickerCallback(r, g, b) {
+	form.colorR.value = r;
+	form.colorG.value = g;
+	form.colorB.value = b;
 	updateToolsPreview();
 }
 
@@ -240,11 +245,8 @@ function initUI() {
 	document.forms.drawingSettings.addEventListener('input', updateToolsPreview);
 	document.forms.drawingSettings.addEventListener('change', showHideLayers);
 	document.forms.drawingSettings.addEventListener('change', updateBellsWhistles);
-	picker = ColorPicker(
-		document.getElementById('slide-wrapper'),
-		document.getElementById('picker-wrapper'),
-		pickerCallback
-	);
+	initPicker();
+	pickerAddCallback(pickerCallback);
 	updateToolsPreview(true);
 	initBellsWhistles();
 

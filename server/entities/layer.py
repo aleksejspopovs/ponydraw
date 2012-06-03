@@ -1,3 +1,6 @@
+# © 2012 Aleksejs Popovs <me@popoffka.ru>
+# Licensed under MIT License. See ../LICENSE for more info.
+
 class Layer():
 	def __init__(self, owner, room, id, name, zIndex):
 		self.owner = owner

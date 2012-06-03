@@ -1,3 +1,6 @@
+# © 2012 Aleksejs Popovs <me@popoffka.ru>
+# Licensed under MIT License. See ../LICENSE for more info.
+
 import json, sys
 sys.path.append('../')
 import config

@@ -52,13 +52,15 @@
 				<h2>Options</h2>
 				Line thickness: <input type='range' name='thickness' min='1' max='40' value='3'><br />
 				Colour:<br />
-				<div class='cp-small'>
-					<div class='picker-wrapper' id='picker-wrapper'></div>
-					<div class='slide-wrapper' id='slide-wrapper'></div>
+				<div id='cp'>
+					<canvas id='cp_gradients' width='240' height='210'></canvas>
+					<div class='cp_indicator' id='cp_slider'></div>
+					<div class='cp_indicator' id='cp_picker'></div>
 				</div>
-				<input type='number' name='colorR' min='0' max='255' step='10' value='0'>
-				<input type='number' name='colorG' min='0' max='255' step='10' value='0'>
-				<input type='number' name='colorB' min='0' max='255' step='10' value='0'>
+				<div id='cp_slots'></div>
+				<input type='number' name='colorR' min='0' max='255' step='1' size='3' value='0'>
+				<input type='number' name='colorG' min='0' max='255' step='1' size='3' value='0'>
+				<input type='number' name='colorB' min='0' max='255' step='1' size='3' value='0'>
 				<canvas id='toolsPreview' width='250' height='40'></canvas>
 				<h2>Actions</h2>
 				<a href='javascript:void(0)' onclick='saveLocal();'>Save current canvas locally</a>

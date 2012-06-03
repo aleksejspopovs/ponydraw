@@ -1,10 +1,13 @@
 Overview
 ========
 
-PonyDraw is an online multiuser WebSockets based drawing application. The key feature of PonyDraw is support for many layers, just like in any professional drawing application.
+PonyDraw is an online multiuser WebSockets-based drawing application. The key feature of PonyDraw is support for many layers, just like in any professional drawing application.
+
+PonyDraw is licensed under MIT License, which allows you to do pretty much anything you want to and only requires you to keep original attribution and license text. See LICENSE for more info.
 
 Features
 ========
+
 - support for many drawing rooms (creatable by users themselves) with no limit on the amount of users in a room
 - support for multiple layers in a room
 	- layers protect you work from vandals, while still allowing random people to join and draw together with you
@@ -16,7 +19,7 @@ Features
 Client
 ======
 
-PonyDraw client (located in the `client` directory in this repository) is a HTML+JavaScript application that doesn't require any dynamic content and can be served using any web server software (for example, nginx). PonyDraw client uses WebSockets and <canvas>, so a modern browser is required to use it.
+PonyDraw client (located in the `client` directory in this repository) is a HTML+JavaScript application that doesn't require any dynamic content and can be served using any web server software (for example, nginx). PonyDraw client uses WebSockets and &lt;canvas&gt;, so a modern browser is required to use it.
 
 Keyboard shortcuts
 ------------------

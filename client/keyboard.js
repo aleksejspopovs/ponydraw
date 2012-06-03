@@ -1,3 +1,8 @@
+/*
+© 2012 Aleksejs Popovs <me@popoffka.ru>
+Licensed under MIT License. See ../LICENSE for more info.
+*/
+
 function thicknessHandler(event) {
 	if (event.target.nodeName.toLowerCase() != 'body') {
 		return;
