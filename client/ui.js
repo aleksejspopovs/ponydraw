@@ -223,7 +223,7 @@ function saveLocal() {
 	var ctx = tmpC.getContext('2d');
 	if (document.getElementById('checkers').style.display == 'none') {
 		ctx.fillStyle = '#FFFFFF';
-		ctx.fillRect(tmpC.width, tmpC.height);
+		ctx.fillRect(0, 0, tmpC.width, tmpC.height);
 	}
 
 	var images = [];

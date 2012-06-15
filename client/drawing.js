@@ -55,6 +55,7 @@ function getDrawingSettings() {
 
 function mouseDown(e) {
 	e.preventDefault();
+	document.forms.chatMsg.msg.blur();
 	switch (getTool()) {
 		case 'pencil':
 		case 'eraser':
