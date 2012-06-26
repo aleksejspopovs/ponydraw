@@ -5,6 +5,7 @@
 
 import sys, json
 import config
+import argparse, os
 from twisted.internet import reactor
 from twisted.python import log
 from autobahn.websocket import WebSocketServerFactory, WebSocketServerProtocol, listenWS
@@ -176,7 +177,26 @@ class PonyDrawServerFactory(WebSocketServerFactory):
 
 
 if __name__ == '__main__':
+	parser = argparse.ArgumentParser(description='Server component for PonyDraw, a WebSockets-based multi-user drawing application.')
+	parser.add_argument('-P', '--pid', help='store the PID of the running server in this file')
+	args = parser.parse_args()
+
 	log.startLogging(config.logFile)
+	if not args.pid is None:
+		try:
+			pidf = open(args.pid, 'w')
+			pidf.write(str(os.getpid()))
+			pidf.close()
+		except:
+			print 'Couldn\'t store the PID'
+
+
 	factory = PonyDrawServerFactory(config.wsListenIP, config.storage, config.storageArgs)
 	listenWS(factory)
 	reactor.run()
+
+	if not args.pid is None:
+		try:
+			os.remove(args.pid)
+		except:
+			print 'Couldn\'t remove the PID'
